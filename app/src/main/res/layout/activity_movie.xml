@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="@color/app_bg">
 
     <TextView
         android:id="@+id/tvHeader"
@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:text="Movies"
-        android:textColor="@android:color/black"
+        android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -46,17 +46,18 @@
                     android:text="Now Showing"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@color/black"/>
+                    android:textColor="@color/text_primary"/>
 
                 <ImageView
+                    android:id="@+id/btnSeeAllNowShowing"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginStart="8dp"
-                    app:tint="@color/gray_text"
                     android:background="@drawable/bg_circle_arrow"
                     android:padding="2dp"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_arrow_right" />
+                    android:src="@drawable/ic_arrow_right"
+                    app:tint="@color/text_grey" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
@@ -81,13 +82,14 @@
                     android:text="Coming Soon"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@color/black"/>
+                    android:textColor="@color/text_primary"/>
 
                 <ImageView
+                    android:id="@+id/btnSeeAllComingSoon"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginStart="8dp"
-                    app:tint="@color/gray_text"
+                    app:tint="@color/text_grey"
                     android:background="@drawable/bg_circle_arrow"
                     android:padding="2dp"
                     android:scaleType="centerInside"
@@ -109,10 +111,10 @@
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
+        android:background="@color/app_bg"
         app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="unlabeled"
-        app:itemIconTint="@color/black"
+        app:itemIconTint="@color/text_primary"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

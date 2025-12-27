@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+
+    <TextView
+        android:text="Thêm Phòng Mới"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <EditText
+        android:id="@+id/etRoomId"
+        android:hint="Mã ID (VD: room_01)"
+        android:background="#F0F0F0"
+        android:padding="10dp"
+        android:textColorHint="@color/text_grey"
+        android:textColor="#000000"
+        android:layout_marginBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <EditText
+        android:id="@+id/etRoomName"
+        android:hint="Tên phòng (VD: Phòng 1)"
+        android:textColor="#000000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <EditText
+        android:id="@+id/etRoomType"
+        android:hint="Loại phòng (2D, 3D, IMAX...)"
+        android:layout_marginTop="8dp"
+        android:textColor="#000000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <EditText
+            android:id="@+id/etRows"
+            android:hint="Số hàng (Row)"
+            android:inputType="number"
+            android:textColor="#000000"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/etCols"
+            android:hint="Số ghế/hàng (Col)"
+            android:textColor="#000000"
+            android:inputType="number"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSaveRoom"
+        android:text="Lưu Phòng"
+        android:backgroundTint="@color/button_bg"
+        android:textColor="@color/text_secondary"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

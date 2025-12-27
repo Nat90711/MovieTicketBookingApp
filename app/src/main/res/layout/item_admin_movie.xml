@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingVertical="12dp"
-    android:background="@color/white">
+    android:background="@color/app_bg">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardPoster"
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:text="Tên: Conan Movie 28..."
             android:textSize="14sp"
-            android:textColor="@color/black"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:maxLines="2"
             android:ellipsize="end"/>
@@ -106,7 +106,7 @@
                 android:layout_height="24dp"
                 android:src="@drawable/ic_edit"
                 android:padding="2dp"
-                app:tint="@color/black" />
+                app:tint="@color/text_primary" />
 
             <View
                 android:layout_width="1dp"
@@ -120,7 +120,7 @@
                 android:layout_height="24dp"
                 android:src="@drawable/ic_delete"
                 android:padding="2dp"
-                app:tint="@color/black" />
+                app:tint="@color/text_primary" />
         </LinearLayout>
     </LinearLayout>
 

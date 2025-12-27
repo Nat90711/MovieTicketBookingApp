@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_bg">#121212</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFFFFFFF</color>
+    <color name="text_grey">#888888</color>
+    <color name="button_bg">#D6272A</color>
+    <color name="input_stroke">#E0E0E0</color>
+    <color name="search_bar_bg">#F5F5F5</color>
+</resources>

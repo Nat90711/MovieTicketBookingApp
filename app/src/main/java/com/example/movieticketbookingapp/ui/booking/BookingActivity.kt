@@ -1,0 +1,271 @@
+package com.example.movieticketbookingapp.ui.booking
+
+import android.content.Intent
+import android.graphics.Color
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.example.movieticketbookingapp.R
+import com.example.movieticketbookingapp.model.Movie
+import com.google.android.material.button.MaterialButton
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+
+class BookingActivity : AppCompatActivity() {
+
+    private lateinit var rvTime: RecyclerView
+    private lateinit var rvDate: RecyclerView
+    private lateinit var imgPoster: ImageView
+    private lateinit var tvMovieTitle: TextView
+    private lateinit var btnContinue: MaterialButton
+    private lateinit var db: FirebaseFirestore
+
+    // Dữ liệu
+    private var movie: Movie? = null
+    private var selectedDateFull: String = "" // Lưu ngày dạng "dd/MM/yyyy" để query
+    private var selectedShowtimeId: String = "" // Lưu ID thật của suất chiếu
+    private var selectedTime: String = ""
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_booking_main)
+
+        db = FirebaseFirestore.getInstance()
+        initViews()
+
+        // 1. Nhận dữ liệu phim
+        movie = intent.getParcelableExtra("movie_data")
+        if (movie != null) {
+            setupMovieInfo(movie!!)
+        }
+
+        // 2. Setup danh sách ngày (Tự động 7 ngày tới)
+        setupDateList()
+
+        // 3. Setup danh sách giờ (Ban đầu rỗng)
+        setupTimeList()
+
+        findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
+
+        // 4. Xử lý nút Continue
+        btnContinue.setOnClickListener {
+            if (selectedShowtimeId.isNotEmpty()) {
+                val intent = Intent(this, SeatSelectionActivity::class.java)
+                intent.putExtra("movie_data", movie)
+                intent.putExtra("showtime_id", selectedShowtimeId) // Gửi ID thật
+                intent.putExtra("selected_date", selectedDateFull)
+                intent.putExtra("selected_time", selectedTime)
+                // Có thể lấy tên rạp từ showtime nếu cần, tạm thời để cứng hoặc lấy từ Intent cũ
+                intent.putExtra("cinema_name", "Cinestar Sinh Viên")
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Vui lòng chọn suất chiếu!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun initViews() {
+        rvTime = findViewById(R.id.rvTime)
+        rvDate = findViewById(R.id.rvDate)
+        imgPoster = findViewById(R.id.imgPoster)
+        tvMovieTitle = findViewById(R.id.tvMovieTitle)
+        btnContinue = findViewById(R.id.btnContinue)
+    }
+
+    private fun setupMovieInfo(movie: Movie) {
+        tvMovieTitle.text = movie.title
+        Glide.with(this).load(movie.posterUrl).centerCrop().into(imgPoster)
+    }
+
+    // --- XỬ LÝ NGÀY (DATE) ---
+    data class DateItem(val dayOfWeek: String, val dayOfMonth: String, val fullDate: String)
+
+    private fun setupDateList() {
+        val dateList = ArrayList<DateItem>()
+        val calendar = Calendar.getInstance()
+        val dayFormat = SimpleDateFormat("EEE", Locale.ENGLISH) // Mon, Tue...
+        val dateFormat = SimpleDateFormat("dd", Locale.ENGLISH)  // 01, 02...
+        val fullFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) // 15/12/2025
+
+        // Tạo 7 ngày liên tiếp từ hôm nay
+        for (i in 0..6) {
+            val dayOfWeek = dayFormat.format(calendar.time).uppercase()
+            val dayOfMonth = dateFormat.format(calendar.time)
+            val fullDate = fullFormat.format(calendar.time)
+
+            dateList.add(DateItem(dayOfWeek, dayOfMonth, fullDate))
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+
+        val adapter = DateAdapter(dateList) { dateItem ->
+            selectedDateFull = dateItem.fullDate
+            // Khi chọn ngày -> Load giờ chiếu
+            loadShowtimesForDate(selectedDateFull)
+        }
+        rvDate.adapter = adapter
+        rvDate.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+    }
+
+    // --- XỬ LÝ GIỜ (TIME / SHOWTIME) ---
+    // Class nhỏ để giữ data suất chiếu
+    data class ShowtimeItem(val id: String, val time: String)
+
+    private fun setupTimeList() {
+        // Khởi tạo Adapter rỗng ban đầu
+        val adapter = TimeAdapter(listOf()) { showtime ->
+            selectedShowtimeId = showtime.id
+            selectedTime = showtime.time
+        }
+        rvTime.adapter = adapter
+        rvTime.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+    }
+
+    private fun loadShowtimesForDate(date: String) {
+        val movieId = movie?.id ?: return
+
+        // Query Firestore: Tìm suất chiếu có movieId và date khớp
+        db.collection("showtimes")
+            .whereEqualTo("movieId", movieId) // Dùng ID kiểu String hoặc Int tùy model Movie của bạn
+            .whereEqualTo("date", date)
+            .get()
+            .addOnSuccessListener { documents ->
+                val showtimeList = ArrayList<ShowtimeItem>()
+
+                for (doc in documents) {
+                    val id = doc.id
+                    val time = doc.getString("time") ?: ""
+                    if (time.isNotEmpty()) {
+                        showtimeList.add(ShowtimeItem(id, time))
+                    }
+                }
+
+                // Sắp xếp giờ tăng dần
+                showtimeList.sortBy { it.time }
+
+                // Cập nhật Adapter
+                if (rvTime.adapter is TimeAdapter) {
+                    (rvTime.adapter as TimeAdapter).updateData(showtimeList)
+                }
+
+                // Reset lựa chọn nếu danh sách thay đổi
+                if (showtimeList.isNotEmpty()) {
+                    selectedShowtimeId = showtimeList[0].id
+                    selectedTime = showtimeList[0].time
+                } else {
+                    selectedShowtimeId = ""
+                    selectedTime = ""
+                    Toast.makeText(this, "Chưa có lịch chiếu ngày $date", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Lỗi tải lịch chiếu: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // --- ADAPTERS ---
+
+    inner class DateAdapter(
+        private val dates: List<DateItem>,
+        private val onItemClick: (DateItem) -> Unit
+    ) : RecyclerView.Adapter<DateAdapter.ViewHolder>() {
+
+        private var selectedPosition = -1
+
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val container: LinearLayout = view.findViewById(R.id.itemDate)
+            val tvDayOfWeek: TextView = view.findViewById(R.id.tvDayOfWeek)
+            val tvDayOfMonth: TextView = view.findViewById(R.id.tvDayOfMonth)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_date_slot, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val item = dates[position]
+            holder.tvDayOfWeek.text = item.dayOfWeek
+            holder.tvDayOfMonth.text = item.dayOfMonth
+
+            if (selectedPosition == position) {
+                holder.container.setBackgroundResource(R.drawable.bg_time_slot_selected)
+                holder.tvDayOfWeek.setTextColor(Color.WHITE)
+                holder.tvDayOfMonth.setTextColor(Color.WHITE)
+            } else {
+                holder.container.setBackgroundResource(R.drawable.bg_time_slot_selector)
+                holder.tvDayOfWeek.setTextColor(Color.BLACK) // Hoặc màu xám tùy theme
+                holder.tvDayOfMonth.setTextColor(Color.BLACK)
+            }
+
+            holder.itemView.setOnClickListener {
+                val previousItem = selectedPosition
+                selectedPosition = holder.adapterPosition
+                notifyItemChanged(previousItem)
+                notifyItemChanged(selectedPosition)
+                onItemClick(item)
+            }
+        }
+
+        override fun getItemCount() = dates.size
+    }
+
+    inner class TimeAdapter(
+        private var showtimes: List<ShowtimeItem>,
+        private val onItemClick: (ShowtimeItem) -> Unit
+    ) : RecyclerView.Adapter<TimeAdapter.ViewHolder>() {
+
+        private var selectedPosition = -1
+
+        fun updateData(newList: List<ShowtimeItem>) {
+            this.showtimes = newList
+            this.selectedPosition = -1 // Reset về đầu
+            notifyDataSetChanged()
+        }
+
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val tvTime: TextView = view.findViewById(R.id.tvTime)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_time_slot, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            if (showtimes.isEmpty()) return
+
+            val item = showtimes[position]
+            holder.tvTime.text = item.time
+
+            if (selectedPosition == position) {
+                holder.tvTime.setBackgroundResource(R.drawable.bg_time_slot_selected)
+                holder.tvTime.setTextColor(Color.WHITE)
+            } else {
+                holder.tvTime.setBackgroundResource(R.drawable.bg_time_slot_selector)
+                holder.tvTime.setTextColor(Color.BLACK)
+            }
+
+            holder.itemView.setOnClickListener {
+                val previousItem = selectedPosition
+                selectedPosition = holder.adapterPosition
+                notifyItemChanged(previousItem)
+                notifyItemChanged(selectedPosition)
+                onItemClick(item)
+            }
+        }
+
+        override fun getItemCount() = showtimes.size
+    }
+}

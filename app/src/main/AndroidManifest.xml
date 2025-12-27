@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".ui.main.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -14,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MovieTicketBookingApp">
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.main.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,16 +24,42 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SignUpActivity" />
-        <activity android:name=".HomeActivity" />
-        <activity android:name=".MovieActivity" />
-        <activity android:name=".DetailActivity" />
-        <activity android:name=".BookingActivity" />
-        <activity android:name=".SeatSelectionActivity" />
-        <activity android:name=".ReviewTicketActivity" />
-        <activity android:name=".AdminActivity" />
-        <activity android:name=".AddMovieActivity" />
-        <activity android:name=".EditMovieActivity" />
+        <activity android:name=".ui.auth.SignUpActivity" />
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.main.HomeActivity"
+            android:exported="false" />
+        <activity android:name=".ui.movie.MovieActivity" />
+        <activity android:name=".ui.movie.DetailActivity" />
+        <activity android:name=".ui.booking.BookingActivity" />
+        <activity android:name=".ui.booking.SeatSelectionActivity" />
+        <activity android:name=".ui.booking.ReviewTicketActivity" />
+        <activity android:name=".ui.admin.AdminMovieActivity" />
+        <activity android:name=".ui.admin.AddMovieActivity" />
+        <activity android:name=".ui.admin.EditMovieActivity" />
+        <activity android:name=".ui.booking.PaymentActivity"
+            android:exported="true"
+            android:launchMode="singleTop"> <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="demozpdk" android:host="app" />
+        </intent-filter>
+
+        </activity>
+        <activity android:name=".ui.booking.PaymentSuccessActivity" />
+        <activity android:name=".ui.ticket.TicketDetailActivity" />
+        <activity android:name=".ui.ticket.MyTicketsActivity" />
+        <activity android:name=".ui.main.ProfileActivity" />
+        <activity android:name=".ui.movie.MovieListActivity" />
+        <activity android:name=".ui.admin.AdminDashboardActivity" />
+        <activity android:name=".ui.admin.AdminRoomActivity" />
+        <activity android:name=".ui.admin.AddShowtimeActivity" />
+        <activity android:name=".ui.admin.AdminShowtimeActivity" />
+
+
     </application>
 
 </manifest>

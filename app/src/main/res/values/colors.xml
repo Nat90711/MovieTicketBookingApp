@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="gray_text">#888888</color>
+    <color name="app_bg">#FFFFFFFF</color>
+    <color name="text_primary">#FF000000</color>
+    <color name="text_secondary">#FFFFFFFF</color>
+    <color name="text_grey">#888888</color>
+    <color name="button_bg">#FF000000</color>
     <color name="input_stroke">#E0E0E0</color>
-    <color name="google_btn_bg">#F5F5F5</color>
+    <color name="search_bar_bg">#F5F5F5</color>
 </resources>
