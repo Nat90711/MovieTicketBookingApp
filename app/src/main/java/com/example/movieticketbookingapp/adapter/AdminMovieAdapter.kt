@@ -17,7 +17,7 @@ class AdminMovieAdapter(
     private val onDeleteClick: (Movie) -> Unit
 ) : RecyclerView.Adapter<AdminMovieAdapter.AdminViewHolder>() {
 
-    // Danh sách hiển thị (có thể bị lọc khi tìm kiếm)
+    // Danh sách hiển thị
     private var displayList: ArrayList<Movie> = ArrayList(originalList)
 
     inner class AdminViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

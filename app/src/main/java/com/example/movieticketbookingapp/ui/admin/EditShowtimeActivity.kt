@@ -25,7 +25,6 @@ class EditShowtimeActivity : AppCompatActivity() {
     private lateinit var spinnerRooms: Spinner
     private lateinit var tvDate: TextView
     private lateinit var tvTime: TextView
-    private lateinit var etPrice: EditText
     private lateinit var btnSave: TextView
     private lateinit var tvHeader: TextView
 
@@ -35,19 +34,16 @@ class EditShowtimeActivity : AppCompatActivity() {
 
     // Data cần sửa
     private var currentShowtimeId: String = ""
-    private var currentMovieId: String = "" // Hoặc Int tùy model của bạn
+    private var currentMovieId: String = ""
     private var currentRoomId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Tận dụng lại layout Add, chỉ cần đổi text header
         setContentView(R.layout.activity_admin_add_showtime)
 
         db = FirebaseFirestore.getInstance()
         initViews()
 
-        // Đổi tên Header thành "Sửa Suất Chiếu"
-        // (Bạn cần id tvHeader trong layout, nếu chưa có thì findViewById theo cấu trúc layout)
         try {
             findViewById<TextView>(R.id.tvHeader)?.text = "Cập Nhật Suất Chiếu"
         } catch (e: Exception) {}
@@ -56,7 +52,6 @@ class EditShowtimeActivity : AppCompatActivity() {
 
         setupPickers()
 
-        // QUAN TRỌNG: Load dữ liệu xong mới điền data cũ vào
         loadDataAndSetupUI()
 
         btnSave.setOnClickListener {
@@ -71,12 +66,11 @@ class EditShowtimeActivity : AppCompatActivity() {
         spinnerRooms = findViewById(R.id.spinnerRooms)
         tvDate = findViewById(R.id.tvSelectDate)
         tvTime = findViewById(R.id.tvSelectTime)
-        etPrice = findViewById(R.id.etPrice)
         btnSave = findViewById(R.id.btnSaveShowtime)
     }
 
     private fun loadDataAndSetupUI() {
-        // 1. Nhận dữ liệu từ Intent
+        // Nhận dữ liệu từ Intent
         val showtimeId = intent.getStringExtra("showtime_id")
         if (showtimeId == null) {
             Toast.makeText(this, "Lỗi: Không tìm thấy ID suất chiếu", Toast.LENGTH_SHORT).show()
@@ -93,9 +87,8 @@ class EditShowtimeActivity : AppCompatActivity() {
                     // Fill dữ liệu text
                     tvDate.text = showtime.date
                     tvTime.text = showtime.time
-                    etPrice.setText(showtime.price.toInt().toString())
 
-                    // Lưu tạm ID để tí nữa set Spinner
+                    // Lưu tạm ID
                     currentMovieId = showtime.movieId.toString()
                     currentRoomId = showtime.roomId
 
@@ -125,8 +118,8 @@ class EditShowtimeActivity : AppCompatActivity() {
             spinnerMovies.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, movieTitles)
             spinnerMovies.setSelection(selectedMovieIndex)
 
-            // Sau đó Load Rooms
-            loadRooms(selectedMovieIndex) // Truyền index phim vào chỉ để flow chạy tuần tự
+            // Load Rooms
+            loadRooms(selectedMovieIndex)
         }
     }
 
@@ -155,7 +148,6 @@ class EditShowtimeActivity : AppCompatActivity() {
     private fun updateShowtime() {
         val selectedMovie = movieList[spinnerMovies.selectedItemPosition]
         val selectedRoom = roomList[spinnerRooms.selectedItemPosition]
-        val price = etPrice.text.toString().toDoubleOrNull() ?: 0.0
 
         val updateData = hashMapOf<String, Any>(
             "movieId" to selectedMovie.id,
@@ -165,7 +157,6 @@ class EditShowtimeActivity : AppCompatActivity() {
             "roomName" to selectedRoom.roomName,
             "date" to tvDate.text.toString(),
             "time" to tvTime.text.toString(),
-            "price" to price,
             "duration" to selectedMovie.duration
         )
 
@@ -186,7 +177,6 @@ class EditShowtimeActivity : AppCompatActivity() {
             Toast.makeText(this, "Vui lòng chọn ngày giờ!", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (etPrice.text.isEmpty()) return false
         return true
     }
 

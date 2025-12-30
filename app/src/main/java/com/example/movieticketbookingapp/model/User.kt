@@ -8,6 +8,6 @@ data class User(
     val username: String,
     val name: String,
     val email: String,
-    val password: String, // Trong thực tế password phải được mã hóa, đây là demo
-    val role: String = "user" // "user" hoặc "admin"
+    val password: String,
+    val role: String = "user"
 ) : Parcelable

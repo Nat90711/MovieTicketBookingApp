@@ -97,7 +97,7 @@ class   PaymentActivity : AppCompatActivity() {
         val appId = 2553 // AppID mặc định của Sandbox
         ZaloPaySDK.init(appId, Environment.SANDBOX)
 
-        // Cho phép chạy mạng ở Main Thread (Chỉ dùng cho Demo Sandbox cho nhanh)
+        // Cho phép chạy mạng ở Main Thread
         val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
@@ -324,7 +324,7 @@ class   PaymentActivity : AppCompatActivity() {
         val tvContent = view.findViewById<TextView>(R.id.tvPaymentContentSheet)
         val btnClose = view.findViewById<Button>(R.id.btnCloseSheet)
 
-        // 3. Logic tạo QR (Giữ nguyên logic cũ của bạn)
+        // 3. Logic tạo QR
         val uniqueCode = "VE${System.currentTimeMillis() % 1000000}"
         paymentCodeString = uniqueCode
         tvContent.text = "Nội dung CK: $paymentCodeString"
@@ -402,7 +402,6 @@ class   PaymentActivity : AppCompatActivity() {
                             // KIỂM TRA ĐIỀU KIỆN:
                             // 1. Nội dung CK chứa mã code của mình (paymentCodeString)
                             // 2. Số tiền khớp với giá vé (totalPrice)
-                            // Lưu ý: So sánh chuỗi cẩn thận, ở đây mình check contains code là quan trọng nhất
 
                             if (content.contains(paymentCodeString)) {
                                 runOnUiThread {
@@ -437,7 +436,6 @@ class   PaymentActivity : AppCompatActivity() {
         val showtimeRef = db.collection("showtimes").document(showtimeId)
 
         // 2. Cập nhật mảng 'bookedSeats' (Thêm ghế vừa mua vào danh sách đã bán vĩnh viễn)
-        // Lưu ý: Convert ID từ String sang Long để đồng bộ với kiểu dữ liệu trên Firebase
         val seatIdsLong = seatIds.map { it.toLong() }
         val updateData = hashMapOf(
             "bookedSeats" to FieldValue.arrayUnion(*seatIdsLong.toTypedArray())
@@ -445,7 +443,6 @@ class   PaymentActivity : AppCompatActivity() {
         batch.set(showtimeRef, updateData, SetOptions.merge())
 
         // 3. Xóa các bản ghi trong collection 'locks' (Dọn dẹp rác)
-        // Vì đã mua thành công rồi, không cần giữ khóa tạm thời nữa
         for (seatId in seatIds) {
             val lockRef = showtimeRef.collection("locks").document(seatId)
             batch.delete(lockRef)
@@ -454,18 +451,14 @@ class   PaymentActivity : AppCompatActivity() {
         // 4. Cam kết thực thi (Commit)
         batch.commit()
             .addOnSuccessListener {
-                // Sau khi update showtime thành công, ta mới lưu lịch sử vào collection 'bookings'
                 createNewBookingRecord(currentUser.uid)
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Lỗi lưu vé vào hệ thống: ${e.message}", Toast.LENGTH_LONG).show()
-                // Lưu ý: Ở dự án thực tế, nếu tiền đã trừ mà lưu lỗi thì phải gọi API hoàn tiền.
-                // Ở đồ án này, bạn có thể bỏ qua hoặc Log lỗi lại.
             }
     }
 
     private fun createNewBookingRecord(userId: String) {
-        // 1. Thử lấy thông tin User từ Firestore (để có tên chuẩn)
         db.collection("users").document(userId).get()
             .addOnCompleteListener { task ->
                 var nameToSave = "Khách hàng"

@@ -113,7 +113,6 @@ class MyTicketsActivity : AppCompatActivity() {
                 }
 
                 // Sắp xếp: Đảo ngược để vé mới nhất lên đầu
-                // (Cách đơn giản thay vì tạo index orderBy trên Firebase)
                 bookingList.reverse()
                 adapter.notifyDataSetChanged()
 

@@ -46,7 +46,6 @@ class AdminShowtimeActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // Cập nhật Adapter nhận thêm onEditClick
         adapter = ShowtimeAdapter(
             showtimeList,
             onEditClick = { showtime ->
@@ -93,7 +92,7 @@ class AdminShowtimeActivity : AppCompatActivity() {
     }
 
     private fun checkAndPerformDelete(showtime: Showtime) {
-        // Bước 2: Kiểm tra dữ liệu mới nhất trên Server (để tránh trường hợp vừa có người mua xong)
+        // Bước 2: Kiểm tra dữ liệu mới nhất trên Server
         db.collection("showtimes").document(showtime.id).get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
@@ -137,7 +136,7 @@ class AdminShowtimeActivity : AppCompatActivity() {
             val tvMovie: TextView = view.findViewById(R.id.tvMovieTitle)
             val tvRoom: TextView = view.findViewById(R.id.tvRoomName)
             val tvDate: TextView = view.findViewById(R.id.tvDateTime)
-            val btnEdit: ImageView = view.findViewById(R.id.btnEdit) // Nút Sửa mới
+            val btnEdit: ImageView = view.findViewById(R.id.btnEdit)
             val btnDelete: ImageView = view.findViewById(R.id.btnDelete)
         }
 

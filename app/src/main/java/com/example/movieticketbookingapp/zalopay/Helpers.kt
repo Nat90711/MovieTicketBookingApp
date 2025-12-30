@@ -10,7 +10,6 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.random.Random // Import thêm Random
 
 object Helpers {
-    // Xóa biến transIdDefault cũ đi, không cần nữa
 
     fun getAppTransId(): String {
         // Tạo format ngày: yyMMdd (Ví dụ: 251215)
@@ -25,9 +24,7 @@ object Helpers {
         return String.format("%s_2553_%s", timeString, randomId)
     }
 
-    // ... (Hàm getMac và bytesToHex giữ nguyên)
     fun getMac(key: String, data: String): String {
-        // ... giữ nguyên ...
         return try {
             val sha256Hmac = Mac.getInstance("HmacSHA256")
             val secretKey = SecretKeySpec(key.toByteArray(), "HmacSHA256")

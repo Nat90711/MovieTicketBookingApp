@@ -68,7 +68,6 @@ class BookingActivity : AppCompatActivity() {
                 intent.putExtra("showtime_id", selectedShowtimeId) // Gửi ID thật
                 intent.putExtra("selected_date", selectedDateFull)
                 intent.putExtra("selected_time", selectedTime)
-                // Có thể lấy tên rạp từ showtime nếu cần, tạm thời để cứng hoặc lấy từ Intent cũ
                 intent.putExtra("cinema_name", "Cinestar Sinh Viên")
                 startActivity(intent)
             } else {

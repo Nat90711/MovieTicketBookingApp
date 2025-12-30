@@ -89,8 +89,6 @@ class AdminRoomActivity : AppCompatActivity() {
                 roomList.clear()
                 for (document in result) {
                     val room = document.toObject(CinemaRoom::class.java)
-                    // Firestore toObject đôi khi không map được ID nếu field trong document không có
-                    // Nên gán thủ công ID document vào object cho chắc chắn
                     room.roomId = document.id
                     roomList.add(room)
                 }
@@ -152,7 +150,6 @@ class AdminRoomActivity : AppCompatActivity() {
             .show()
     }
 
-    // --- GIỮ NGUYÊN LOGIC THÊM PHÒNG CŨ CỦA BẠN ---
     private fun showAddRoomDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_room, null)
         val etId = dialogView.findViewById<EditText>(R.id.etRoomId)
@@ -192,7 +189,7 @@ class AdminRoomActivity : AppCompatActivity() {
             // Đóng dialog nhập liệu
             dialog.dismiss()
 
-            // Chuyển sang màn hình Cấu hình (Logic cũ của bạn)
+            // Chuyển sang màn hình Cấu hình
             val intent = Intent(this, RoomConfigActivity::class.java)
             intent.putExtra("room_id", id)
             intent.putExtra("room_name", name)
@@ -209,7 +206,7 @@ class AdminRoomActivity : AppCompatActivity() {
     inner class RoomAdapter(
         private val list: List<CinemaRoom>,
         private val onItemClick: (CinemaRoom) -> Unit,
-        private val onDeleteClick: (CinemaRoom) -> Unit // <--- Callback mới cho nút xóa
+        private val onDeleteClick: (CinemaRoom) -> Unit
     ) : RecyclerView.Adapter<RoomAdapter.RoomViewHolder>() {
 
         inner class RoomViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {

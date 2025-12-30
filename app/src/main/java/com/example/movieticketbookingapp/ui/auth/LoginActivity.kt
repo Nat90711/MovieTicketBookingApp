@@ -30,8 +30,8 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var progressBar: ProgressBar
     private lateinit var btnLogin: MaterialButton
-    private lateinit var btnGoogleLogin: MaterialButton // <--- Khai báo nút mới
-    private lateinit var googleSignInClient: GoogleSignInClient // <--- Client Google
+    private lateinit var btnGoogleLogin: MaterialButton
+    private lateinit var googleSignInClient: GoogleSignInClient
 
     // --- XỬ LÝ KẾT QUẢ TRẢ VỀ TỪ GOOGLE ---
     private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -154,8 +154,6 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // ... (Giữ nguyên các hàm showLoading, hideLoading, loginWithUsername, performFirebaseLogin, checkRoleAndRedirect cũ) ...
-
     private fun showLoading() {
         progressBar.visibility = View.VISIBLE
         btnLogin.isEnabled = false
@@ -169,8 +167,6 @@ class LoginActivity : AppCompatActivity() {
         btnGoogleLogin.isEnabled = true // Enable lại
         btnLogin.text = "LOGIN"
     }
-
-    // ... (Phần còn lại của file LoginActivity cũ copy vào đây)
 
     private fun loginWithUsername(username: String, password: String) {
         db.collection("users")

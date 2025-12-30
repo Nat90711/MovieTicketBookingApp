@@ -31,7 +31,6 @@ class BannerAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BannerViewHolder {
-        // Lưu ý: layout item_banner của bạn có thể tên khác, hãy giữ nguyên tên cũ
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_banner, parent, false)
         return BannerViewHolder(view)
     }

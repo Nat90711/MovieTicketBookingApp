@@ -17,13 +17,11 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        // 1. Ẩn thanh Action Bar cho đẹp (nếu có)
         supportActionBar?.hide()
 
-        // 2. Tạo độ trễ 3 giây (3000ms)
         Handler(Looper.getMainLooper()).postDelayed({
             checkLoginAndNavigate()
-        }, 2500) // 2.5 giây là vừa đẹp
+        }, 2500)
     }
 
     private fun checkLoginAndNavigate() {
@@ -36,12 +34,11 @@ class SplashActivity : AppCompatActivity() {
             db.collection("users").document(currentUser.uid).get()
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
-                        // Lấy trường role (Lưu ý: trên Firestore bạn lưu là "role" hay "isAdmin" thì sửa dòng này cho khớp)
+                        // Lấy trường role
                         val role = document.getString("role")
 
                         if (role == "admin") {
                             // -> LÀ ADMIN: Chuyển sang màn hình Admin
-                            // (Thay AdminMainActivity bằng tên class màn hình Admin thực tế của bạn)
                             val intent = Intent(this, AdminDashboardActivity::class.java)
                             startActivity(intent)
                         } else {
@@ -50,14 +47,14 @@ class SplashActivity : AppCompatActivity() {
                             startActivity(intent)
                         }
                     } else {
-                        // Trường hợp lỗi (user đã bị xóa trên DB nhưng Auth vẫn còn), quay về Login cho chắc
+                        // Trường hợp lỗi (user đã bị xóa trên DB nhưng Auth vẫn còn), quay về Login
                         val intent = Intent(this, LoginActivity::class.java)
                         startActivity(intent)
                     }
                     finish() // Đóng Splash sau khi đã chuyển trang
                 }
                 .addOnFailureListener {
-                    // Nếu mất mạng hoặc lỗi server, có thể cho về Login hoặc Home tùy bạn
+                    // Nếu mất mạng hoặc lỗi server, có thể cho về Login
                     val intent = Intent(this, LoginActivity::class.java)
                     startActivity(intent)
                     finish()

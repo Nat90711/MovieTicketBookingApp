@@ -14,7 +14,7 @@ class MyApplication : Application() {
 
         val isDarkMode = sharedPreferences.getBoolean("is_dark_mode", false)
 
-        // 2. Áp dụng theme ngay lập tức
+        // 2. Áp dụng theme
         if (isDarkMode) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         } else {

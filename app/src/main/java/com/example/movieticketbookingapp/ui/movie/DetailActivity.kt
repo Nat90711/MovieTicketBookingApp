@@ -22,7 +22,6 @@ class DetailActivity : AppCompatActivity() {
         val btnBuyTicket = findViewById<MaterialButton>(R.id.btnBuyTicket)
 
         // 1. Nhận dữ liệu từ màn hình trước
-        // (Lưu ý: "movie_data" là key chúng ta sẽ dùng bên Adapter)
         val movie = intent.getParcelableExtra<Movie>("movie_data")
 
         if (movie != null) {

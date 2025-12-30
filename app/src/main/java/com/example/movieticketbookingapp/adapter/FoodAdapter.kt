@@ -32,7 +32,7 @@ class FoodAdapter(
             val formatter = DecimalFormat("#,###")
             tvPrice.text = "${formatter.format(food.price)} đ"
 
-            // Load ảnh (nếu có thư viện Glide)
+            // Load ảnh
             if (food.imageUrl.isNotEmpty()) {
                 Glide.with(itemView.context).load(food.imageUrl).into(imgFood)
             }

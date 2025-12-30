@@ -25,7 +25,6 @@ class PaymentSuccessActivity : AppCompatActivity() {
         }
 
         // Nút XEM VÉ: Chuyển sang TicketDetailActivity
-        // Cần truyền tiếp dữ liệu vé nhận được từ PaymentActivity sang đây
         btnViewTicket.setOnClickListener {
             val intent = Intent(this, TicketDetailActivity::class.java)
             if (getIntent().extras != null) {

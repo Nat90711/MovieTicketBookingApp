@@ -40,12 +40,10 @@ class EditMovieActivity : AppCompatActivity() {
         val cbIsHot = findViewById<CheckBox>(R.id.cbIsHot)
         val etCast = findViewById<EditText>(R.id.etCast)
 
-        // Thay Spinner bằng EditText
         val etGenre = findViewById<EditText>(R.id.etGenre)
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
-        // (Xóa đoạn setup Spinner cũ)
 
         val movie = intent.getParcelableExtra<Movie>("movie_data")
 
@@ -105,7 +103,7 @@ class EditMovieActivity : AppCompatActivity() {
                 title = title,
                 posterUrl = url,
                 duration = formattedDuration,
-                genre = genreInput, // Lưu text mới
+                genre = genreInput,
                 description = desc,
                 director = director,
                 language = language,

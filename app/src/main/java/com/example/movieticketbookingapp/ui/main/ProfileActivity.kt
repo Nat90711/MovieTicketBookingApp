@@ -45,7 +45,6 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var etEmail: TextInputEditText
     private lateinit var etDob: TextInputEditText
     private lateinit var etPhone: TextInputEditText
-    private lateinit var btnLogout: MaterialButton
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var btnSave: MaterialButton
     private lateinit var btnSettings: ImageView
@@ -54,7 +53,6 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
 
-    // Trạng thái Edit
     private var isEditing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,7 +91,7 @@ class ProfileActivity : AppCompatActivity() {
         etEmail = findViewById(R.id.etEmail)
         etDob = findViewById(R.id.etDob)
         etPhone = findViewById(R.id.etPhone)
-        btnSave = findViewById(R.id.btnSave) // Ánh xạ nút Save
+        btnSave = findViewById(R.id.btnSave)
         btnSettings = findViewById(R.id.btnSettings)
         bottomNav = findViewById(R.id.bottomNavigation)
     }
@@ -125,7 +123,6 @@ class ProfileActivity : AppCompatActivity() {
     private fun showSettingsMenu(anchorView: View) {
         val view = LayoutInflater.from(this).inflate(R.layout.layout_custom_popup_menu, null)
 
-        // Tăng chiều rộng popup lên một chút cho đẹp (200dp -> 220dp)
         val widthInDp = 220f
         val density = resources.displayMetrics.density
         val widthInPx = (widthInDp * density).toInt()
@@ -142,7 +139,7 @@ class ProfileActivity : AppCompatActivity() {
 
         // 1. Ánh xạ các View
         val btnDarkModeItem = view.findViewById<View>(R.id.menuItemDarkMode)
-        val btnSupportItem = view.findViewById<View>(R.id.menuItemSupport) // <--- MỚI
+        val btnSupportItem = view.findViewById<View>(R.id.menuItemSupport)
         val btnLogoutItem = view.findViewById<View>(R.id.menuItemLogout)
 
         val imgDarkMode = view.findViewById<ImageView>(R.id.imgDarkMode)
@@ -183,8 +180,6 @@ class ProfileActivity : AppCompatActivity() {
     private fun showSupportDialog() {
         // Sử dụng BottomSheetDialog để hiển thị đẹp mắt từ dưới lên
         val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
-        // Lưu ý: Bạn cần tạo file layout_bottom_sheet_support.xml (Xem Bước 3)
-        // Nếu lười tạo file mới, bạn có thể dùng AlertDialog đơn giản ở dưới
         val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_support, null)
         dialog.setContentView(view)
 
@@ -252,10 +247,10 @@ class ProfileActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.layout_dialog_logout)
 
-        // 2. Setup Background trong suốt (QUAN TRỌNG để thấy bo góc)
+        // 2. Setup Background trong suốt
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-        // Setup kích thước (90% chiều rộng màn hình cho đẹp)
+        // Setup kích thước
         dialog.window?.setLayout(
             (resources.displayMetrics.widthPixels * 0.9).toInt(),
             WindowManager.LayoutParams.WRAP_CONTENT
@@ -303,7 +298,6 @@ class ProfileActivity : AppCompatActivity() {
         if (enable) {
             btnSave.visibility = View.VISIBLE
             etName.requestFocus()
-            // Nút Edit có thể mờ đi hoặc giữ nguyên, tùy bạn
         } else {
             btnSave.visibility = View.GONE
         }

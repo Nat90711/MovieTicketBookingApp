@@ -33,7 +33,6 @@ class SeatSelectionActivity : AppCompatActivity() {
     private var showtimeId: String = ""
     private var movie: Movie? = null
 
-    // --- DỮ LIỆU MỚI TỪ MÀN HÌNH CHỌN LOẠI VÉ ---
     private var isCoupleMode = false      // Chế độ: True (chỉ chọn đôi), False (chỉ chọn đơn)
     private var totalTickets = 0          // Số lượng VÉ đã mua
     private var maxSeatsToSelect = 0      // Số lượng GHẾ cần chọn (Vé đôi x2)
@@ -97,7 +96,6 @@ class SeatSelectionActivity : AppCompatActivity() {
             .addOnSuccessListener { showtimeDoc ->
                 val roomId = showtimeDoc.getString("roomId") ?: ""
                 roomName = showtimeDoc.getString("roomName") ?: "Unknown Room"
-                // Không cần lấy giá basePrice nữa vì đã có fixedTotalPrice
 
                 if (roomId.isNotEmpty()) {
                     fetchRoomData(roomId)
@@ -312,7 +310,7 @@ class SeatSelectionActivity : AppCompatActivity() {
             myLockedSeatIds.addAll(seatIds)
 
             // Lấy duration từ movie
-            val durationString = movie?.duration.toString() // Nếu model Movie chưa có trường duration, bạn cần thêm vào hoặc sửa chỗ này
+            val durationString = movie?.duration.toString()
 
             // 3. Chuyển sang ReviewTicketActivity
             val intent = Intent(this, FoodSelectionActivity::class.java)
@@ -372,7 +370,6 @@ class SeatSelectionActivity : AppCompatActivity() {
         return (consecutiveDoubles % 2 == 0)
     }
 
-    // Các hàm realtime cũ giữ nguyên logic
     private fun startRealtimeUpdates() {
         val showtimeRef = db.collection("showtimes").document(showtimeId)
         val locksRef = showtimeRef.collection("locks")
@@ -430,8 +427,6 @@ class SeatSelectionActivity : AppCompatActivity() {
             }
             // 3. Còn lại: Nếu không phải Sold cũng không phải Held
             else {
-                // Chỉ reset về AVAILABLE nếu nó đang bị kẹt ở trạng thái BOOKED hoặc HELD cũ.
-                // TUYỆT ĐỐI KHÔNG reset nếu nó đang là SELECTED (do chính user đang chọn).
                 if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) {
                     seat.status = SeatStatus.AVAILABLE
                     isChanged = true

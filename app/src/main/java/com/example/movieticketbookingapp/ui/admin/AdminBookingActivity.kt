@@ -30,7 +30,7 @@ class AdminBookingActivity : AppCompatActivity() {
 
     private lateinit var db: FirebaseFirestore
     private lateinit var adapter: AdminBookingAdapter
-    private var fullList = ArrayList<Map<String, Any>>() // List gốc từ DB
+    private var fullList = ArrayList<Map<String, Any>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -136,7 +136,6 @@ class AdminBookingActivity : AppCompatActivity() {
         }
 
         adapter.updateData(filtered)
-        // Đã xóa phần tính doanh thu ở đây
     }
 
     private fun getStartOfToday(): Long {

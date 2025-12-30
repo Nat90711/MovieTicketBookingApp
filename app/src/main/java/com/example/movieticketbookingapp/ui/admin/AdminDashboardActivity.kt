@@ -41,12 +41,13 @@ class AdminDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, AdminStatsActivity::class.java))
         }
 
+        // 5. Quản lý Món ăn
         findViewById<CardView>(R.id.cardManageFood).setOnClickListener {
             startActivity(Intent(this, AdminFoodActivity::class.java))
         }
 
+        // 6. Quản lý vé
         findViewById<CardView>(R.id.cardManageBookings).setOnClickListener {
-            // Chuyển sang màn hình danh sách vé (Bạn đã tạo ở bước trước)
             startActivity(Intent(this, AdminBookingActivity::class.java))
         }
 
@@ -56,30 +57,27 @@ class AdminDashboardActivity : AppCompatActivity() {
         }
     }
 
-    // Hàm hiển thị Dialog xác nhận đăng xuất (Copy từ ProfileActivity)
+    // Hàm hiển thị Dialog xác nhận đăng xuất
     private fun performLogout() {
-        // 1. Khởi tạo Dialog
+        // Khởi tạo Dialog
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.layout_dialog_logout) // Đảm bảo bạn đã có file layout này
+        dialog.setContentView(R.layout.layout_dialog_logout)
 
-        // 2. Setup Background trong suốt (QUAN TRỌNG để thấy bo góc)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-        // Setup kích thước (90% chiều rộng màn hình cho đẹp)
         dialog.window?.setLayout(
             (resources.displayMetrics.widthPixels * 0.9).toInt(),
             WindowManager.LayoutParams.WRAP_CONTENT
         )
 
-        // Không cho bấm ra ngoài để tắt
         dialog.setCancelable(false)
 
-        // 3. Ánh xạ nút bấm
+        // Ánh xạ nút bấm
         val btnCancel = dialog.findViewById<Button>(R.id.btnCancelLogout)
         val btnConfirm = dialog.findViewById<Button>(R.id.btnConfirmLogout)
 
-        // 4. Xử lý sự kiện
+        // Xử lý sự kiện
         btnCancel.setOnClickListener {
             dialog.dismiss() // Đóng dialog
         }

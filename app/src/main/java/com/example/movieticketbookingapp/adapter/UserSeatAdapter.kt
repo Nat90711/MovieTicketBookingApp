@@ -11,7 +11,7 @@ import com.example.movieticketbookingapp.R
 
 class UserSeatAdapter(
     private var seatList: List<Seat>,
-    private val totalCols: Int, // Cần biết số cột để tính toán vị trí ghế đôi
+    private val totalCols: Int,
     private val isCoupleMode: Boolean,
     private val onSeatClick: (Seat) -> Unit
 ) : RecyclerView.Adapter<UserSeatAdapter.SeatViewHolder>() {
@@ -31,8 +31,6 @@ class UserSeatAdapter(
 
     inner class SeatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val viewSeat: View = itemView.findViewById(R.id.viewSeat)
-        // Nếu layout item_seat của bạn có TextView tên ghế thì ánh xạ, ko thì thôi
-        // val tvSeatName: TextView? = itemView.findViewById(R.id.tvSeatName)
 
         fun bind(seat: Seat, position: Int) {
             // 1. Reset trạng thái visual
@@ -84,8 +82,6 @@ class UserSeatAdapter(
                 else -> Color.WHITE
             }
 
-            // Áp dụng màu
-            // Lưu ý: Dùng PorterDuff.Mode.SRC_IN hoặc setTint trực tiếp
             viewSeat.background.setTint(color)
 
             // Sự kiện click
@@ -107,9 +103,8 @@ class UserSeatAdapter(
             }
 
             if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) {
-                viewSeat.alpha = 1.0f // <--- QUAN TRỌNG: Giữ nguyên độ đậm để thấy màu Xám
+                viewSeat.alpha = 1.0f
                 itemView.setOnClickListener {
-                    // Không làm gì hoặc báo ghế đã bán
                 }
             }
             // 2. TRƯỜNG HỢP: GHẾ CÒN TRỐNG (AVAILABLE)
@@ -140,7 +135,6 @@ class UserSeatAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SeatViewHolder {
-        // Dùng lại item_seat.xml (đã xóa margin cứng ở bài trước)
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_seat, parent, false)
         return SeatViewHolder(view)
     }

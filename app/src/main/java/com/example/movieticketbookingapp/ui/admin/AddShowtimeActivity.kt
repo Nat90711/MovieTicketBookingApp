@@ -104,7 +104,7 @@ class AddShowtimeActivity : AppCompatActivity() {
         }
     }
 
-    // --- 1. HÀM KIỂM TRA ĐẦU VÀO ---
+    // --- HÀM KIỂM TRA ĐẦU VÀO ---
     private fun validateInput(): Boolean {
         if (movieList.isEmpty() || roomList.isEmpty()) {
             Toast.makeText(this, "Đang tải dữ liệu, vui lòng chờ...", Toast.LENGTH_SHORT).show()
@@ -117,7 +117,7 @@ class AddShowtimeActivity : AppCompatActivity() {
         return true
     }
 
-    // --- 2. HÀM CHECK TRÙNG LỊCH ---
+    // ---  HÀM CHECK TRÙNG LỊCH ---
     private fun checkConflictAndSave() {
         val selectedRoom = roomList[spinnerRooms.selectedItemPosition]
         val selectedDate = tvDate.text.toString()
@@ -163,7 +163,7 @@ class AddShowtimeActivity : AppCompatActivity() {
             }
     }
 
-    // --- 3. HÀM LƯU (Đã update) ---
+    // --- HÀM LƯU ---
     private fun saveToFirebase(movie: Movie, room: CinemaRoom, time: String) {
         val showtimeId = db.collection("showtimes").document().id
 

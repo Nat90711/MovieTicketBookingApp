@@ -29,9 +29,9 @@ class AdminSeatAdapter(
             // Xóa background cũ để tránh chồng chéo
             viewSeat.background = null
 
-            // Lấy LayoutParams để chỉnh margin (như bài trước)
+            // Lấy LayoutParams để chỉnh margin
             val params = viewSeat.layoutParams as ViewGroup.MarginLayoutParams
-            val marginSize = 4 // Hoặc số bạn muốn
+            val marginSize = 4
 
             // Reset margin mặc định
             params.setMargins(marginSize, marginSize, marginSize, marginSize)
@@ -39,23 +39,17 @@ class AdminSeatAdapter(
             when (type) {
                 SEAT_TYPE_STANDARD -> {
                     viewSeat.setBackgroundResource(R.drawable.bg_seat_available)
-                    // QUAN TRỌNG: Xóa sạch mọi màu tint cũ (để không bị dính màu vàng/hồng)
                     viewSeat.background.setTintList(null)
                 }
                 SEAT_TYPE_VIP -> {
                     viewSeat.setBackgroundResource(R.drawable.bg_seat_available)
-                    // QUAN TRỌNG: Dùng .mutate() trước khi tô màu để không ảnh hưởng ghế khác
                     viewSeat.background.mutate().setTint(Color.parseColor("#F44336"))
                 }
                 SEAT_TYPE_AISLE -> {
                     viewSeat.visibility = View.INVISIBLE
                 }
                 SEAT_TYPE_DOUBLE -> {
-                    // Logic ghế đôi dính nhau (như bài trước)
                     determineCoupleSeatBackground(position, params, marginSize)
-                    // Vì bg_seat_couple_left/right đã có màu hồng sẵn trong XML
-                    // nên thường không cần setTint.
-                    // Nhưng nếu bạn muốn chắc chắn, hãy setTintList(null) ở đây luôn.
                     viewSeat.background?.setTintList(null)
                 }
             }
@@ -80,24 +74,21 @@ class AdminSeatAdapter(
 
             // Kiểm tra Chẵn/Lẻ để biết là Trái hay Phải
             if (consecutiveDoublesCount % 2 == 0) {
-                // === ĐÂY LÀ NỬA TRÁI ===
+                // === NỬA TRÁI ===
                 viewSeat.setBackgroundResource(R.drawable.bg_seat_couple_left)
 
-                // Mẹo dính liền: Set margin bên Phải bằng 0 (hoặc số âm nhẹ nếu vẫn hở)
                 params.setMargins(stdMargin, stdMargin, 0, stdMargin)
 
             } else {
-                // === ĐÂY LÀ NỬA PHẢI ===
+                // === NỬA PHẢI ===
                 viewSeat.setBackgroundResource(R.drawable.bg_seat_couple_right)
 
-                // Mẹo dính liền: Set margin bên Trái bằng 0
                 params.setMargins(0, stdMargin, stdMargin, stdMargin)
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        // Dùng lại item_seat.xml cũ của bạn
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_seat, parent, false)
         return ViewHolder(view)
     }

@@ -33,7 +33,7 @@ class RoomConfigActivity : AppCompatActivity() {
     // Data nhận từ màn hình trước
     private var roomName = ""
     private var roomType = ""
-    private var roomId = "" // ID này có thể do Admin nhập hoặc tự gen
+    private var roomId = ""
     private var rows = 0
     private var cols = 0
 
@@ -130,13 +130,6 @@ class RoomConfigActivity : AppCompatActivity() {
                 Toast.makeText(this, "Không đủ chỗ tạo ghế đôi ở cuối hàng!", Toast.LENGTH_SHORT).show()
                 return
             }
-
-            // Chúng ta chuẩn bị tạo cặp đôi tại [position] và [position + 1]
-            // Cần dọn dẹp các mối quan hệ cũ của 2 vị trí này (nếu có)
-
-            // CHECK VỊ TRÍ BÊN TRÁI (position):
-            // Nếu vị trí này đang là ghế đôi, và nó là "đuôi" (Right) của cặp [position-1, position]
-            // -> Thì ghế [position-1] sẽ bị lẻ loi -> Reset nó về Thường
             if (seatConfigList[position] == SEAT_TYPE_DOUBLE && !isLeftSeatOfCouple(position)) {
                 if (position - 1 >= 0) {
                     seatConfigList[position - 1] = SEAT_TYPE_STANDARD
@@ -144,13 +137,7 @@ class RoomConfigActivity : AppCompatActivity() {
                 }
             }
 
-            // CHECK VỊ TRÍ BÊN PHẢI (position + 1):
-            // Nếu vị trí này đang là ghế đôi, và nó là "đầu" (Left) của cặp [position+1, position+2]
-            // -> Thì ghế [position+2] sẽ bị lẻ loi -> Reset nó về Thường
-            // Lưu ý: Phải check bounds
             if (position + 1 < seatConfigList.size && seatConfigList[position + 1] == SEAT_TYPE_DOUBLE) {
-                // Cẩn thận: isLeftSeatOfCouple tính toán dựa trên dữ liệu hiện tại.
-                // Tại thời điểm này dữ liệu chưa đổi nên check vẫn chính xác.
                 if (isLeftSeatOfCouple(position + 1)) {
                     if (position + 2 < seatConfigList.size) {
                         seatConfigList[position + 2] = SEAT_TYPE_STANDARD
@@ -250,7 +237,7 @@ class RoomConfigActivity : AppCompatActivity() {
         btnModeDouble.strokeWidth = 0
 
         // Highlight nút đang chọn bằng viền dày
-        val activeStrokeWidth = 4 // dp (hoặc pixel tùy chỉnh)
+        val activeStrokeWidth = 4
         val activeColor = Color.WHITE
 
         when (mode) {
@@ -271,15 +258,9 @@ class RoomConfigActivity : AppCompatActivity() {
         val db = FirebaseFirestore.getInstance()
         val docRef = db.collection("rooms").document(roomId)
 
-        // LOGIC MỚI:
         if (isEditMode) {
-            // --- NẾU ĐANG SỬA ---
-            // Không cần kiểm tra trùng lặp (vì chắc chắn nó tồn tại rồi).
-            // Cho phép ghi đè (Update) luôn.
             performSave(db)
         } else {
-            // --- NẾU ĐANG TẠO MỚI ---
-            // Phải kiểm tra xem ID đã có chưa để tránh ghi đè nhầm phòng khác.
             docRef.get().addOnSuccessListener { document ->
                 if (document.exists()) {
                     Toast.makeText(this, "Lỗi: ID phòng '$roomId' đã tồn tại! Vui lòng chọn ID khác.", Toast.LENGTH_LONG).show()
@@ -292,7 +273,6 @@ class RoomConfigActivity : AppCompatActivity() {
         }
     }
 
-    // Hàm phụ để thực hiện lưu (tách ra cho code gọn)
     private fun performSave(db: FirebaseFirestore) {
         val newRoom = CinemaRoom(
             roomId = roomId,

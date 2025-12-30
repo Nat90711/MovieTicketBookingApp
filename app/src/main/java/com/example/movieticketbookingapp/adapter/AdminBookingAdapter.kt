@@ -22,8 +22,6 @@ class AdminBookingAdapter(
         val tvMovie: TextView = view.findViewById(R.id.tvMovieTitle)
         val tvSeat: TextView = view.findViewById(R.id.tvSeatInfo)
         val tvPrice: TextView = view.findViewById(R.id.tvPrice)
-
-        // --- BỔ SUNG ÁNH XẠ USER ---
         val tvCustomer: TextView = view.findViewById(R.id.tvCustomerInfo)
     }
 
@@ -49,7 +47,7 @@ class AdminBookingAdapter(
         val formatter = java.text.DecimalFormat("#,###")
         holder.tvPrice.text = "${formatter.format(price.toDoubleOrNull() ?: 0)} VND"
 
-        // --- XỬ LÝ HIỂN THỊ INFO USER (MỚI) ---
+        // --- XỬ LÝ HIỂN THỊ INFO USER ---
         // Lấy tên và email từ Firestore (nếu có lưu)
         val userName = item["userName"]?.toString() ?: "Khách vãng lai"
         val userContact = item["userEmail"]?.toString() ?: "Không có TT" // Hoặc dùng userPhone

@@ -94,7 +94,6 @@ class MovieActivity : AppCompatActivity() {
                 if (snapshots != null) {
                     allMovies.clear()
                     for (doc in snapshots) {
-                        // === THÊM TRY-CATCH TẠI ĐÂY ===
                         try {
                             val movie = doc.toObject(Movie::class.java)
                             allMovies.add(movie)
@@ -119,7 +118,7 @@ class MovieActivity : AppCompatActivity() {
         rvNowShowing.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
-        // 2. LỌC DANH SÁCH "SẮP CHIẾU"
+        // LỌC DANH SÁCH "SẮP CHIẾU"
         // Chỉ lấy những phim có status là "coming_soon"
         val comingSoonList = allMovies.filter { it.status == "coming_soon" }
 
@@ -135,7 +134,7 @@ class MovieActivity : AppCompatActivity() {
         val intent = Intent(
             this,
             DetailActivity::class.java
-        ) // Đảm bảo tên Activity là DetailActivity (hoặc MovieDetailActivity tùy code bạn)
+        )
         intent.putExtra("movie_data", movie)
         startActivity(intent)
     }

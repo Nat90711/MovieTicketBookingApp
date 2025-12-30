@@ -34,7 +34,7 @@ class AdminMovieActivity : AppCompatActivity() {
 
     // Firebase
     private lateinit var db: FirebaseFirestore
-    private lateinit var auth: FirebaseAuth // Thêm biến Auth
+    private lateinit var auth: FirebaseAuth
 
     private var movieList = ArrayList<Movie>()
 
@@ -43,7 +43,7 @@ class AdminMovieActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin_movie_list)
 
         db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance() // Khởi tạo Auth
+        auth = FirebaseAuth.getInstance()
 
         initViews()
         setupRecyclerView()
@@ -110,7 +110,6 @@ class AdminMovieActivity : AppCompatActivity() {
 
     private fun showDeleteDialog(movie: Movie) {
         // Kiểm tra xem phim này có đang được xếp lịch chiếu không
-        // Lưu ý: Đảm bảo field "movieId" trong collection "showtimes" khớp kiểu dữ liệu với movie.id (Int hoặc String)
         db.collection("showtimes")
             .whereEqualTo("movieId", movie.id)
             .get()
@@ -131,7 +130,7 @@ class AdminMovieActivity : AppCompatActivity() {
             }
     }
 
-    // 2. Hàm xóa thật (Chỉ được gọi khi đã qua bài kiểm tra)
+    // Hàm xóa thật
     private fun performDeleteMovie(movie: Movie) {
         AlertDialog.Builder(this)
             .setTitle("Xóa Phim")
@@ -150,12 +149,12 @@ class AdminMovieActivity : AppCompatActivity() {
             .show()
     }
 
-    // 3. Hàm hiển thị thông báo lỗi đẹp
+    // Hàm hiển thị thông báo
     private fun showErrorDialog(title: String, message: String) {
         AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
-            .setIcon(R.drawable.ic_launcher_background) // Bạn có thể thay bằng icon cảnh báo (ic_warning)
+            .setIcon(R.drawable.ic_warning)
             .setPositiveButton("Đã hiểu", null)
             .show()
     }

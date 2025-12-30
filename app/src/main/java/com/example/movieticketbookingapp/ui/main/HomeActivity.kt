@@ -33,7 +33,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var rvNowShowing: RecyclerView
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var layoutIndicators: LinearLayout
-    private lateinit var tvHotMovie: TextView // (Nếu cần xử lý click See All)
+    private lateinit var tvHotMovie: TextView
     private lateinit var etSearch: EditText
     private lateinit var rvSearchResults: RecyclerView
     private lateinit var searchAdapter: SearchAdapter
@@ -83,7 +83,7 @@ class HomeActivity : AppCompatActivity() {
         btnSeeAllNowShowing = findViewById(R.id.btnSeeAllNowShowing)
     }
 
-    // === HÀM QUAN TRỌNG NHẤT: TẢI DỮ LIỆU TỪ FIREBASE ===
+    // === TẢI DỮ LIỆU TỪ FIREBASE ===
     private fun loadMoviesRealtime() {
         db.collection("movies")
             .addSnapshotListener { snapshots, e ->
@@ -94,7 +94,6 @@ class HomeActivity : AppCompatActivity() {
                 if (snapshots != null) {
                     allMovies.clear()
                     for (doc in snapshots) {
-                        // === THÊM TRY-CATCH TẠI ĐÂY ===
                         try {
                             val movie = doc.toObject(Movie::class.java)
                             allMovies.add(movie)
@@ -114,8 +113,7 @@ class HomeActivity : AppCompatActivity() {
         val bannerList = allMovies.filter{it.hot}
         setupBanner(bannerList)
 
-        // 2. Setup Now Showing (Hiển thị tất cả hoặc lọc theo ý bạn)
-        // Ở đây mình hiển thị tất cả phim
+        // 2. Setup Now Showing
         val nowShowingMovies = allMovies.filter { it.status == "now_showing" }
         setupNowShowingList(nowShowingMovies)
     }
@@ -140,7 +138,7 @@ class HomeActivity : AppCompatActivity() {
             }
         })
 
-        // Hiệu ứng Zoom (Optional - Giữ nguyên nếu bạn đã có)
+        // Hiệu ứng Zoom
         vpBanner.setPageTransformer { page, position ->
             val r = 1 - abs(position)
             page.scaleY = 0.85f + r * 0.15f
@@ -235,10 +233,6 @@ class HomeActivity : AppCompatActivity() {
         searchAdapter = SearchAdapter(arrayListOf()) { clickedMovie ->
             // Khi bấm vào kết quả tìm kiếm -> Mở chi tiết
             openDetailActivity(clickedMovie)
-
-            // Ẩn dropdown và xóa text (tùy chọn)
-            // etSearch.setText("")
-            // rvSearchResults.visibility = android.view.View.GONE
         }
         rvSearchResults.adapter = searchAdapter
         rvSearchResults.layoutManager = LinearLayoutManager(this)

@@ -63,7 +63,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginStart="8dp"
                 android:background="@null"
-                android:hint="Tìm mã vé, tên, sđt..."
+                android:hint="Tìm mã vé, tên phim,..."
                 android:imeOptions="actionSearch"
                 android:inputType="text"
                 android:maxLines="1"
