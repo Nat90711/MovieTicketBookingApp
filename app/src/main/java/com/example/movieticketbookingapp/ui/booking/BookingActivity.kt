@@ -35,8 +35,8 @@ class BookingActivity : AppCompatActivity() {
 
     // Dữ liệu
     private var movie: Movie? = null
-    private var selectedDateFull: String = "" // Lưu ngày dạng "dd/MM/yyyy" để query
-    private var selectedShowtimeId: String = "" // Lưu ID thật của suất chiếu
+    private var selectedDateFull: String = ""
+    private var selectedShowtimeId: String = ""
     private var selectedTime: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,20 +52,21 @@ class BookingActivity : AppCompatActivity() {
             setupMovieInfo(movie!!)
         }
 
-        // 2. Setup danh sách ngày (Tự động 7 ngày tới)
+        // 2. Setup danh sách ngày
         setupDateList()
 
-        // 3. Setup danh sách giờ (Ban đầu rỗng)
+        // 3. Setup danh sách giờ
         setupTimeList()
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
         // 4. Xử lý nút Continue
         btnContinue.setOnClickListener {
+            // KIỂM TRA: Bắt buộc phải chọn suất chiếu mới được đi tiếp
             if (selectedShowtimeId.isNotEmpty()) {
                 val intent = Intent(this, SelectTicketTypeActivity::class.java)
                 intent.putExtra("movie_data", movie)
-                intent.putExtra("showtime_id", selectedShowtimeId) // Gửi ID thật
+                intent.putExtra("showtime_id", selectedShowtimeId)
                 intent.putExtra("selected_date", selectedDateFull)
                 intent.putExtra("selected_time", selectedTime)
                 intent.putExtra("cinema_name", "Cinestar Sinh Viên")
@@ -90,17 +91,15 @@ class BookingActivity : AppCompatActivity() {
         Glide.with(this).load(movie.posterUrl).centerCrop().into(imgPoster)
     }
 
-    // --- XỬ LÝ NGÀY (DATE) ---
     data class DateItem(val dayOfWeek: String, val dayOfMonth: String, val fullDate: String)
 
     private fun setupDateList() {
         val dateList = ArrayList<DateItem>()
         val calendar = Calendar.getInstance()
-        val dayFormat = SimpleDateFormat("EEE", Locale.ENGLISH) // Mon, Tue...
-        val dateFormat = SimpleDateFormat("dd", Locale.ENGLISH)  // 01, 02...
-        val fullFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) // 15/12/2025
+        val dayFormat = SimpleDateFormat("EEE", Locale.ENGLISH)
+        val dateFormat = SimpleDateFormat("dd", Locale.ENGLISH)
+        val fullFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-        // Tạo 7 ngày liên tiếp từ hôm nay
         for (i in 0..6) {
             val dayOfWeek = dayFormat.format(calendar.time).uppercase()
             val dayOfMonth = dateFormat.format(calendar.time)
@@ -110,22 +109,20 @@ class BookingActivity : AppCompatActivity() {
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
-
         val adapter = DateAdapter(dateList) { dateItem ->
             selectedDateFull = dateItem.fullDate
-            // Khi chọn ngày -> Load giờ chiếu
+            // Reset suất chiếu cũ khi chọn ngày mới
+            selectedShowtimeId = ""
+            selectedTime = ""
             loadShowtimesForDate(selectedDateFull)
         }
         rvDate.adapter = adapter
         rvDate.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
-    // --- XỬ LÝ GIỜ (TIME / SHOWTIME) ---
-    // Class nhỏ để giữ data suất chiếu
     data class ShowtimeItem(val id: String, val time: String)
 
     private fun setupTimeList() {
-        // Khởi tạo Adapter rỗng ban đầu
         val adapter = TimeAdapter(listOf()) { showtime ->
             selectedShowtimeId = showtime.id
             selectedTime = showtime.time
@@ -154,35 +151,25 @@ class BookingActivity : AppCompatActivity() {
 
                 showtimeList.sortBy { it.time }
 
-                // --- ĐOẠN LOGIC MỚI: ẨN/HIỆN VIEW ---
                 if (showtimeList.isEmpty()) {
-                    // 1. Không có lịch chiếu -> Ẩn list, Hiện thông báo
                     rvTime.visibility = View.GONE
                     tvEmptyTime.visibility = View.VISIBLE
                     tvEmptyTime.text = "Không có suất chiếu ngày $date"
-
-                    // Reset lựa chọn
-                    selectedShowtimeId = ""
-                    selectedTime = ""
                 } else {
-                    // 2. Có lịch chiếu -> Hiện list, Ẩn thông báo
                     rvTime.visibility = View.VISIBLE
                     tvEmptyTime.visibility = View.GONE
 
-                    // Cập nhật Adapter
                     if (rvTime.adapter is TimeAdapter) {
                         (rvTime.adapter as TimeAdapter).updateData(showtimeList)
                     }
 
-                    // Tự động chọn suất đầu tiên
-                    selectedShowtimeId = showtimeList[0].id
-                    selectedTime = showtimeList[0].time
+                    selectedShowtimeId = ""
+                    selectedTime = ""
+                    // ----------------------------------------
                 }
-                // -------------------------------------
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Lỗi tải lịch chiếu: ${it.message}", Toast.LENGTH_SHORT).show()
-                // Nếu lỗi cũng có thể hiện text báo lỗi
                 rvTime.visibility = View.GONE
                 tvEmptyTime.visibility = View.VISIBLE
                 tvEmptyTime.text = "Lỗi kết nối!"
@@ -221,7 +208,6 @@ class BookingActivity : AppCompatActivity() {
             } else {
                 holder.container.setBackgroundResource(R.drawable.bg_time_slot_selector)
                 val defaultColor = ContextCompat.getColor(holder.itemView.context, R.color.text_primary)
-
                 holder.tvDayOfWeek.setTextColor(defaultColor)
                 holder.tvDayOfMonth.setTextColor(defaultColor)
             }
@@ -247,7 +233,7 @@ class BookingActivity : AppCompatActivity() {
 
         fun updateData(newList: List<ShowtimeItem>) {
             this.showtimes = newList
-            this.selectedPosition = -1 // Reset về đầu
+            this.selectedPosition = -1 // Reset lại trạng thái chưa chọn gì
             notifyDataSetChanged()
         }
 

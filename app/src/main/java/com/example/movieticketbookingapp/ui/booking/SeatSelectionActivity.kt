@@ -36,7 +36,11 @@ class SeatSelectionActivity : AppCompatActivity() {
     private var isCoupleMode = false      // Chế độ: True (chỉ chọn đôi), False (chỉ chọn đơn)
     private var totalTickets = 0          // Số lượng VÉ đã mua
     private var maxSeatsToSelect = 0      // Số lượng GHẾ cần chọn (Vé đôi x2)
-    private var fixedTotalPrice = 0.0     // Tổng tiền đã chốt
+
+    private var fixedTotalPrice = 0.0     // Giá gốc từ màn hình trước (Chưa tính phụ thu VIP)
+    private var currentTotalPrice = 0.0   // Giá thực tế (Đã cộng phụ thu)
+    private val VIP_SURCHARGE = 10000.0   // Phụ thu ghế VIP
+
     private var ticketTypeDetails = ""    // Chuỗi mô tả (VD: "1 Người lớn, 1 HSSV")
 
     // Logic ghế
@@ -67,6 +71,10 @@ class SeatSelectionActivity : AppCompatActivity() {
         isCoupleMode = intent.getBooleanExtra("is_couple_mode", false)
         totalTickets = intent.getIntExtra("total_quantity", 0)
         fixedTotalPrice = intent.getDoubleExtra("total_price", 0.0)
+
+        // Khởi tạo giá hiện tại bằng giá gốc
+        currentTotalPrice = fixedTotalPrice
+
         ticketTypeDetails = intent.getStringExtra("ticket_type_details") ?: ""
 
         // Tính toán số ghế cần chọn:
@@ -201,9 +209,20 @@ class SeatSelectionActivity : AppCompatActivity() {
 
     private fun updateSeatInfoText() {
         val count = selectedSeats.size
-        // Hiển thị: Đã chọn / Tổng cần chọn
+
+        var surcharge = 0.0
+        for (seat in selectedSeats) {
+            // Nếu ghế là VIP (Type = 1) -> Cộng thêm 10k
+            if (seat.type == 1) {
+                surcharge += VIP_SURCHARGE
+            }
+        }
+
+        // Cập nhật giá tổng
+        currentTotalPrice = fixedTotalPrice + surcharge
+
         val formatter = DecimalFormat("#,###")
-        val priceString = formatter.format(fixedTotalPrice)
+        val priceString = formatter.format(currentTotalPrice)
 
         tvSeatInfo.text = "$count/$maxSeatsToSelect ghế - $priceString VND"
 
@@ -257,14 +276,8 @@ class SeatSelectionActivity : AppCompatActivity() {
                 }
 
                 if (partnerSeat != null) {
-                    // --- SỬA CẢ ĐOẠN TÊN GHẾ ĐÔI ---
-                    // Cũ: val partnerColNum = ...
-                    // Mới: Tính tên cho ghế partner luôn
                     val partnerName = calculateSeatName(partnerSeat.id)
-
-                    // Ghép lại: VD: "A1-A2"
                     seatNames.add("$currentName-$partnerName")
-
                     processedDoubleSeatIds.add(partnerSeat.id)
                 } else {
                     seatNames.add(currentName)
@@ -309,10 +322,9 @@ class SeatSelectionActivity : AppCompatActivity() {
             myLockedSeatIds.clear()
             myLockedSeatIds.addAll(seatIds)
 
-            // Lấy duration từ movie
             val durationString = movie?.duration.toString()
 
-            // 3. Chuyển sang ReviewTicketActivity
+            // 3. Chuyển sang màn hình chọn đồ ăn
             val intent = Intent(this, FoodSelectionActivity::class.java)
 
             intent.putExtra("movie_data", movie)
@@ -320,7 +332,6 @@ class SeatSelectionActivity : AppCompatActivity() {
             intent.putExtra("movie_title", movie?.title)
             intent.putExtra("poster_url", movie?.posterUrl)
 
-            // --- CẬP NHẬT: TRUYỀN DỮ LIỆU ĐÃ CÓ SẴN ---
             intent.putExtra("duration", durationString)
 
             val typeSet = HashSet<String>()
@@ -331,7 +342,6 @@ class SeatSelectionActivity : AppCompatActivity() {
                     else -> typeSet.add("Standard")
                 }
             }
-            // Kết quả sẽ là: "Standard", "VIP", hoặc "Standard, VIP"
             val seatTypeString = typeSet.joinToString(", ")
             intent.putExtra("seat_type", seatTypeString)
 
@@ -343,7 +353,10 @@ class SeatSelectionActivity : AppCompatActivity() {
             intent.putStringArrayListExtra("seat_ids", seatIds)
             intent.putStringArrayListExtra("seat_names", seatNames)
 
-            intent.putExtra("total_price", fixedTotalPrice)
+            // --- QUAN TRỌNG: TRUYỀN GIÁ MỚI ĐÃ CỘNG PHỤ PHÍ ---
+            intent.putExtra("total_price", currentTotalPrice)
+            // --------------------------------------------------
+
             intent.putExtra("expire_time_seconds", expireTimeSeconds)
 
             startActivity(intent)
@@ -403,21 +416,16 @@ class SeatSelectionActivity : AppCompatActivity() {
         var isChanged = false
 
         for (seat in allSeats) {
-            // Bỏ qua lối đi
             if (seat.status == SeatStatus.AISLE) continue
-
             val id = seat.id.toLong()
 
-            // 1. Ưu tiên cao nhất: Ghế đã bán (Trong danh sách Sold)
             if (listSoldSeats.contains(id)) {
                 if (seat.status != SeatStatus.BOOKED) {
                     seat.status = SeatStatus.BOOKED
-                    // Nếu ghế này mình lỡ chọn trước khi nó load xong -> Bỏ chọn
                     selectedSeats.remove(seat)
                     isChanged = true
                 }
             }
-            // 2. Ưu tiên nhì: Ghế đang bị người khác giữ (Trong danh sách Locked)
             else if (listLockedSeats.contains(id)) {
                 if (seat.status != SeatStatus.HELD) {
                     seat.status = SeatStatus.HELD
@@ -425,7 +433,6 @@ class SeatSelectionActivity : AppCompatActivity() {
                     isChanged = true
                 }
             }
-            // 3. Còn lại: Nếu không phải Sold cũng không phải Held
             else {
                 if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) {
                     seat.status = SeatStatus.AVAILABLE
@@ -464,18 +471,14 @@ class SeatSelectionActivity : AppCompatActivity() {
         }
     }
 
-    // Hàm tính tên ghế chuẩn (Bỏ qua lối đi AISLE)
     private fun calculateSeatName(seatId: Int): String {
         val rowIndex = seatId / totalCols
-        val rowChar = (rowIndex + 65).toChar() // A, B, C...
+        val rowChar = (rowIndex + 65).toChar()
 
         var realSeatCount = 0
         val startOfRow = rowIndex * totalCols
 
-        // Chạy vòng lặp từ đầu hàng đến vị trí ghế hiện tại
         for (i in startOfRow..seatId) {
-            // Nếu vị trí i KHÔNG PHẢI lối đi -> Thì mới đếm
-            // Lưu ý: Kiểm tra trong danh sách allSeats
             if (i < allSeats.size && allSeats[i].status != SeatStatus.AISLE) {
                 realSeatCount++
             }

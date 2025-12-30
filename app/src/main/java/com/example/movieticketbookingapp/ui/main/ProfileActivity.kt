@@ -200,7 +200,7 @@ class ProfileActivity : AppCompatActivity() {
             dialog.dismiss()
             val intent = Intent(Intent.ACTION_SENDTO).apply {
                 data = android.net.Uri.parse("mailto:")
-                putExtra(Intent.EXTRA_EMAIL, arrayOf("support@cinestar.vn")) // Email rạp
+                putExtra(Intent.EXTRA_EMAIL, arrayOf("support@group08.vn")) // Email rạp
                 putExtra(Intent.EXTRA_SUBJECT, "Hỗ trợ khách hàng - App Đặt vé")
             }
             try {
