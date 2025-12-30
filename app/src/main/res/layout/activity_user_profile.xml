@@ -190,7 +190,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="phone"
-                android:hint="0123456789"
+                android:hint="NA"
                 android:textColorHint="@color/text_grey"
                 android:textColor="@color/text_grey"/>
         </com.google.android.material.textfield.TextInputLayout>
@@ -199,8 +199,8 @@
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="55dp"
-            android:text="Save Changes"
-            android:backgroundTint="#4CAF50"
+            android:text="Save"
+            android:backgroundTint="@color/button_bg"
             android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:visibility="gone"

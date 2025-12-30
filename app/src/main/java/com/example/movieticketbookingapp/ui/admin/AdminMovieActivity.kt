@@ -109,17 +109,54 @@ class AdminMovieActivity : AppCompatActivity() {
     }
 
     private fun showDeleteDialog(movie: Movie) {
+        // Kiểm tra xem phim này có đang được xếp lịch chiếu không
+        // Lưu ý: Đảm bảo field "movieId" trong collection "showtimes" khớp kiểu dữ liệu với movie.id (Int hoặc String)
+        db.collection("showtimes")
+            .whereEqualTo("movieId", movie.id)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    // --- RÀNG BUỘC: CHẶN XÓA NẾU CÒN LỊCH CHIẾU ---
+                    showErrorDialog(
+                        "Không thể xóa phim!",
+                        "Phim '${movie.title}' đang có ${documents.size()} suất chiếu trong hệ thống.\n\nVui lòng xóa hết các suất chiếu của phim này trước khi xóa phim."
+                    )
+                } else {
+                    // --- KHÔNG CÓ RÀNG BUỘC -> HIỆN HỘP THOẠI XÁC NHẬN ---
+                    performDeleteMovie(movie)
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Lỗi kiểm tra dữ liệu: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // 2. Hàm xóa thật (Chỉ được gọi khi đã qua bài kiểm tra)
+    private fun performDeleteMovie(movie: Movie) {
         AlertDialog.Builder(this)
-            .setTitle("Xóa phim")
-            .setMessage("Bạn có chắc muốn xóa phim '${movie.title}' không?")
+            .setTitle("Xóa Phim")
+            .setMessage("Bạn chắc chắn muốn xóa phim '${movie.title}'?\nHành động này không thể hoàn tác.")
             .setPositiveButton("Xóa") { _, _ ->
                 db.collection("movies").document(movie.id.toString())
                     .delete()
                     .addOnSuccessListener {
                         Toast.makeText(this, "Đã xóa thành công!", Toast.LENGTH_SHORT).show()
                     }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Lỗi khi xóa: ${it.message}", Toast.LENGTH_SHORT).show()
+                    }
             }
             .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    // 3. Hàm hiển thị thông báo lỗi đẹp
+    private fun showErrorDialog(title: String, message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setIcon(R.drawable.ic_launcher_background) // Bạn có thể thay bằng icon cảnh báo (ic_warning)
+            .setPositiveButton("Đã hiểu", null)
             .show()
     }
 }

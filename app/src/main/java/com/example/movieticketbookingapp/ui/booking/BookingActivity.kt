@@ -11,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -30,6 +31,7 @@ class BookingActivity : AppCompatActivity() {
     private lateinit var tvMovieTitle: TextView
     private lateinit var btnContinue: MaterialButton
     private lateinit var db: FirebaseFirestore
+    private lateinit var tvEmptyTime: TextView
 
     // Dữ liệu
     private var movie: Movie? = null
@@ -61,7 +63,7 @@ class BookingActivity : AppCompatActivity() {
         // 4. Xử lý nút Continue
         btnContinue.setOnClickListener {
             if (selectedShowtimeId.isNotEmpty()) {
-                val intent = Intent(this, SeatSelectionActivity::class.java)
+                val intent = Intent(this, SelectTicketTypeActivity::class.java)
                 intent.putExtra("movie_data", movie)
                 intent.putExtra("showtime_id", selectedShowtimeId) // Gửi ID thật
                 intent.putExtra("selected_date", selectedDateFull)
@@ -81,6 +83,7 @@ class BookingActivity : AppCompatActivity() {
         imgPoster = findViewById(R.id.imgPoster)
         tvMovieTitle = findViewById(R.id.tvMovieTitle)
         btnContinue = findViewById(R.id.btnContinue)
+        tvEmptyTime = findViewById(R.id.tvEmptyTime)
     }
 
     private fun setupMovieInfo(movie: Movie) {
@@ -135,9 +138,8 @@ class BookingActivity : AppCompatActivity() {
     private fun loadShowtimesForDate(date: String) {
         val movieId = movie?.id ?: return
 
-        // Query Firestore: Tìm suất chiếu có movieId và date khớp
         db.collection("showtimes")
-            .whereEqualTo("movieId", movieId) // Dùng ID kiểu String hoặc Int tùy model Movie của bạn
+            .whereEqualTo("movieId", movieId)
             .whereEqualTo("date", date)
             .get()
             .addOnSuccessListener { documents ->
@@ -151,26 +153,40 @@ class BookingActivity : AppCompatActivity() {
                     }
                 }
 
-                // Sắp xếp giờ tăng dần
                 showtimeList.sortBy { it.time }
 
-                // Cập nhật Adapter
-                if (rvTime.adapter is TimeAdapter) {
-                    (rvTime.adapter as TimeAdapter).updateData(showtimeList)
-                }
+                // --- ĐOẠN LOGIC MỚI: ẨN/HIỆN VIEW ---
+                if (showtimeList.isEmpty()) {
+                    // 1. Không có lịch chiếu -> Ẩn list, Hiện thông báo
+                    rvTime.visibility = View.GONE
+                    tvEmptyTime.visibility = View.VISIBLE
+                    tvEmptyTime.text = "Không có suất chiếu ngày $date"
 
-                // Reset lựa chọn nếu danh sách thay đổi
-                if (showtimeList.isNotEmpty()) {
-                    selectedShowtimeId = showtimeList[0].id
-                    selectedTime = showtimeList[0].time
-                } else {
+                    // Reset lựa chọn
                     selectedShowtimeId = ""
                     selectedTime = ""
-                    Toast.makeText(this, "Chưa có lịch chiếu ngày $date", Toast.LENGTH_SHORT).show()
+                } else {
+                    // 2. Có lịch chiếu -> Hiện list, Ẩn thông báo
+                    rvTime.visibility = View.VISIBLE
+                    tvEmptyTime.visibility = View.GONE
+
+                    // Cập nhật Adapter
+                    if (rvTime.adapter is TimeAdapter) {
+                        (rvTime.adapter as TimeAdapter).updateData(showtimeList)
+                    }
+
+                    // Tự động chọn suất đầu tiên
+                    selectedShowtimeId = showtimeList[0].id
+                    selectedTime = showtimeList[0].time
                 }
+                // -------------------------------------
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Lỗi tải lịch chiếu: ${it.message}", Toast.LENGTH_SHORT).show()
+                // Nếu lỗi cũng có thể hiện text báo lỗi
+                rvTime.visibility = View.GONE
+                tvEmptyTime.visibility = View.VISIBLE
+                tvEmptyTime.text = "Lỗi kết nối!"
             }
     }
 
@@ -205,8 +221,10 @@ class BookingActivity : AppCompatActivity() {
                 holder.tvDayOfMonth.setTextColor(Color.WHITE)
             } else {
                 holder.container.setBackgroundResource(R.drawable.bg_time_slot_selector)
-                holder.tvDayOfWeek.setTextColor(Color.BLACK) // Hoặc màu xám tùy theme
-                holder.tvDayOfMonth.setTextColor(Color.BLACK)
+                val defaultColor = ContextCompat.getColor(holder.itemView.context, R.color.text_primary)
+
+                holder.tvDayOfWeek.setTextColor(defaultColor)
+                holder.tvDayOfMonth.setTextColor(defaultColor)
             }
 
             holder.itemView.setOnClickListener {
@@ -254,7 +272,8 @@ class BookingActivity : AppCompatActivity() {
                 holder.tvTime.setTextColor(Color.WHITE)
             } else {
                 holder.tvTime.setBackgroundResource(R.drawable.bg_time_slot_selector)
-                holder.tvTime.setTextColor(Color.BLACK)
+                val defaultColor = ContextCompat.getColor(holder.itemView.context, R.color.text_primary)
+                holder.tvTime.setTextColor(defaultColor)
             }
 
             holder.itemView.setOnClickListener {

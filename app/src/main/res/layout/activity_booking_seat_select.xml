@@ -42,73 +42,115 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSeat"
         android:layout_width="match_parent"
-        android:layout_height="500dp"
+        android:layout_height="0dp"
         android:layout_marginTop="32dp"
-        android:layout_marginHorizontal="16dp"
-        app:layout_constraintBottom_toTopOf="@id/layoutLegend"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/layoutLegendContainer"
         app:layout_constraintTop_toBottomOf="@id/imgScreen"
         app:layout_constraintVertical_bias="0.0" />
 
     <LinearLayout
-        android:id="@+id/layoutLegend"
+        android:id="@+id/layoutLegendContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="148dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/btnConfirmSeat"
-        tools:layout_editor_absoluteX="16dp">
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/tvSeatInfo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <View
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:background="@drawable/bg_seat_available" />
-
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="Available"
-            android:textSize="12sp" />
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
-        <View
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:background="@drawable/bg_seat_booked" />
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/bg_seat_available" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="Standard"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/bg_seat_available"
+                android:backgroundTint="#F44336"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="VIP"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/bg_seat_available"
+                android:backgroundTint="#E91E63"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Couple"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="Booked"
-            android:textSize="12sp" />
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <View
-            android:layout_width="20dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_seat_selected" />
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/bg_seat_booked" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="Booked"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="Your selection"
-            android:textSize="12sp" />
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/bg_seat_selected" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="Your Selection"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
 
-        <View
-            android:layout_width="20dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_seat_held" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Held"
-            android:textSize="12sp" />
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/bg_seat_held" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Held"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+        </LinearLayout>
     </LinearLayout>
 
     <TextView
@@ -119,6 +161,7 @@
         android:text="0 ghế - 0 VND"
         android:textColor="@color/text_primary"
         android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/btnConfirmSeat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

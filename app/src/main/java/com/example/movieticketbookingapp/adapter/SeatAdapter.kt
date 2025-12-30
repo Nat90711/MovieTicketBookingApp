@@ -10,7 +10,12 @@ import com.example.movieticketbookingapp.R
 // Định nghĩa 4 trạng thái ghế
 enum class SeatStatus { AVAILABLE, SELECTED, BOOKED, AISLE, HELD }
 
-data class Seat(val id: Int, var status: SeatStatus)
+data class Seat(
+    val id: Int,
+    var status: SeatStatus,
+    val type: Int,
+    var price: Double
+)
 
 class SeatAdapter(
     private val seats: List<Seat>,

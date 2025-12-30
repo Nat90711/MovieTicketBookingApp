@@ -33,12 +33,21 @@ import vn.zalopay.sdk.listeners.PayOrderListener
 import java.text.DecimalFormat
 import com.example.movieticketbookingapp.BuildConfig
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.movieticketbookingapp.email.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import okhttp3.ResponseBody
 
 class   PaymentActivity : AppCompatActivity() {
 
     private val SEPAY_API_TOKEN = BuildConfig.SEPAY_TOKEN
     private val MY_BANK_ACCOUNT = BuildConfig.SEPAY_BANK_ACC
     private val MY_BANK_CODE = "MB"
+
+    private val EMAILJS_SERVICE_ID = "service_9mpu0og"
+    private val EMAILJS_TEMPLATE_ID = "template_i97hn0y"
+    private val EMAILJS_PUBLIC_KEY = "zZFIyL41HgRsf5pA9"
 
     private lateinit var cardZalo: CardView
     private lateinit var cardSePay: CardView
@@ -76,6 +85,8 @@ class   PaymentActivity : AppCompatActivity() {
     private var expireTimeSeconds: Long = 0
     private var countDownTimer: android.os.CountDownTimer? = null
     private var qrBottomSheetDialog: BottomSheetDialog? = null
+    private var roomName: String = ""
+    private var foodList = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -117,6 +128,8 @@ class   PaymentActivity : AppCompatActivity() {
         dateTime = intent.getStringExtra("date_time") ?: ""
         posterUrl = intent.getStringExtra("poster_url") ?: ""
         expireTimeSeconds = intent.getLongExtra("expire_time_seconds", 0)
+        roomName = intent.getStringExtra("room_name") ?: ""
+        foodList = intent.getStringArrayListExtra("selected_foods") ?: arrayListOf()
     }
 
     private fun startCountdown() {
@@ -452,48 +465,137 @@ class   PaymentActivity : AppCompatActivity() {
     }
 
     private fun createNewBookingRecord(userId: String) {
-        val orderIdLong = System.currentTimeMillis()
-        val orderIdString = orderIdLong.toString()
-        val paymentMethodName = if (isSePaySelected) "SePay" else "ZaloPay"
+        // 1. Thử lấy thông tin User từ Firestore (để có tên chuẩn)
+        db.collection("users").document(userId).get()
+            .addOnCompleteListener { task ->
+                var nameToSave = "Khách hàng"
+                var emailToSave = ""
+                val currentUser = auth.currentUser
 
-        val bookingData = hashMapOf(
-            "bookingId" to orderIdLong,
-            "userId" to userId,
-            "movieTitle" to movieTitle,
-            "posterUrl" to posterUrl,
-            "cinema" to cinemaName,
-            "dateTime" to dateTime,
-            "seats" to seatNames,
-            "totalPrice" to totalPrice,
-            "bookingTime" to Timestamp.now(),
-            "paymentMethod" to paymentMethodName
+                if (task.isSuccessful && task.result != null && task.result!!.exists()) {
+                    // Lấy thành công từ DB
+                    val userDoc = task.result!!
+                    // Ưu tiên field "fullName", nếu không có thì tìm "name"
+                    val dbName = userDoc.getString("fullName") ?: userDoc.getString("name")
+                    val dbEmail = userDoc.getString("email")
+
+                    // Logic fallback: DB -> Auth -> Mặc định
+                    nameToSave = dbName ?: currentUser?.displayName ?: "Khách hàng"
+                    emailToSave = dbEmail ?: currentUser?.email ?: ""
+                } else {
+                    // Nếu lỗi mạng hoặc chưa lưu profile, dùng tạm thông tin từ Auth
+                    nameToSave = currentUser?.displayName ?: "Khách hàng"
+                    emailToSave = currentUser?.email ?: ""
+                }
+
+                // 2. Chuẩn bị dữ liệu Booking
+                val orderIdLong = System.currentTimeMillis()
+                val orderIdString = orderIdLong.toString()
+                val paymentMethodName = if (isSePaySelected) "SePay" else "ZaloPay"
+
+                val durationStr = intent.getStringExtra("duration") ?: ""
+                val durationInt = durationStr.toIntOrNull() ?: 0
+                val seatTypeStr = intent.getStringExtra("seat_type") ?: ""
+                // Lấy danh sách món ăn từ biến toàn cục foodList (đã nhận ở onCreate)
+                val foodsStr = foodList.joinToString(", ")
+
+                val bookingData = hashMapOf(
+                    "bookingId" to orderIdLong,
+                    "userId" to userId,
+                    "userName" to nameToSave,       // <--- Tên chuẩn
+                    "userEmail" to emailToSave,     // <--- Email chuẩn
+                    "movieTitle" to movieTitle,
+                    "posterUrl" to posterUrl,
+                    "cinema" to cinemaName,
+                    "dateTime" to dateTime,
+                    "seats" to seatNames,
+                    "totalPrice" to totalPrice,
+                    "bookingTime" to Timestamp.now(),
+                    "paymentMethod" to paymentMethodName,
+                    "duration" to durationInt,
+                    "roomName" to roomName,
+                    "seatType" to seatTypeStr,
+                    "foods" to foodsStr,
+                    "status" to "paid"              // <--- Trạng thái thanh toán
+                )
+
+                // 3. Lưu vé vào Firestore
+                db.collection("bookings").document(orderIdString).set(bookingData)
+                    .addOnSuccessListener {
+                        // Gửi email xác nhận (nếu có email)
+                        if (emailToSave.isNotEmpty()) {
+                            sendConfirmationEmail(
+                                toEmail = emailToSave,
+                                toName = nameToSave,
+                                bookingId = orderIdString,
+                                foodsStr = foodsStr
+                            )
+                        }
+
+                        // Chuyển sang màn hình Thành Công
+                        val intent = Intent(this, PaymentSuccessActivity::class.java)
+                        intent.putExtra("movie_title", movieTitle)
+                        intent.putExtra("cinema_name", cinemaName)
+                        intent.putExtra("date_time", dateTime)
+                        intent.putStringArrayListExtra("seat_names", seatNames)
+                        intent.putExtra("total_price", totalPrice)
+                        intent.putExtra("poster_url", posterUrl)
+                        intent.putExtra("booking_id", orderIdString)
+                        intent.putExtra("payment_method", paymentMethodName)
+                        intent.putStringArrayListExtra("selected_foods", foodList)
+                        intent.putExtra("duration", durationStr)
+                        intent.putExtra("seat_type", seatTypeStr)
+                        intent.putExtra("room_name", roomName)
+
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Lỗi lưu vé: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+    }
+
+    private fun sendConfirmationEmail(toEmail: String, toName: String, bookingId: String, foodsStr: String) {
+        val formatter = DecimalFormat("#,### VND")
+
+        // Tạo dữ liệu param khớp với Template trên web
+        val params = EmailParams(
+            to_email = toEmail,
+            to_name = toName,
+            movie_title = movieTitle,
+            cinema_name = cinemaName,
+            room_name = roomName,
+            date_time = dateTime,
+            seat_names = seatNames.joinToString(", "),
+            foods = if (foodsStr.isEmpty()) "Không có" else foodsStr,
+            total_price = formatter.format(totalPrice),
+            booking_id = bookingId
         )
 
-        // 2. Thay lệnh .add() bằng .set()
-        // Ép Firestore dùng orderIdString làm tên Document luôn
-        db.collection("bookings").document(orderIdString).set(bookingData)
-            .addOnSuccessListener {
-                // --- CHUYỂN MÀN HÌNH THÀNH CÔNG ---
-                val intent = Intent(this, PaymentSuccessActivity::class.java)
+        val request = EmailRequest(
+            serviceId = EMAILJS_SERVICE_ID,
+            templateId = EMAILJS_TEMPLATE_ID,
+            userId = EMAILJS_PUBLIC_KEY,
+            templateParams = params
+        )
 
-                intent.putExtra("movie_title", movieTitle)
-                intent.putExtra("cinema_name", cinemaName)
-                intent.putExtra("date_time", dateTime)
-                intent.putStringArrayListExtra("seat_names", seatNames)
-                intent.putExtra("total_price", totalPrice)
-                intent.putExtra("poster_url", posterUrl)
-
-                // QUAN TRỌNG: Truyền đúng cái ID số này sang màn hình Success
-                intent.putExtra("booking_id", orderIdString)
-                intent.putExtra("payment_method", paymentMethodName)
-
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+        // Gọi API (Chạy ngầm không chặn UI)
+        RetrofitClient.instance.sendEmail(request).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    // Mail đã gửi ok
+                    println("Email sent successfully!")
+                } else {
+                    println("Failed to send email: ${response.code()}")
+                }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Lỗi lưu lịch sử: ${e.message}", Toast.LENGTH_SHORT).show()
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                println("Error sending email: ${t.message}")
             }
+        })
     }
 
     // Hàm nhận kết quả khi quay lại từ app ZaloPay

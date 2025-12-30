@@ -24,7 +24,6 @@ class AddShowtimeActivity : AppCompatActivity() {
     private lateinit var spinnerRooms: Spinner
     private lateinit var tvDate: TextView
     private lateinit var tvTime: TextView
-    private lateinit var etPrice: EditText
     private lateinit var btnSave: TextView
 
     // Data Lists
@@ -60,7 +59,6 @@ class AddShowtimeActivity : AppCompatActivity() {
         spinnerRooms = findViewById(R.id.spinnerRooms)
         tvDate = findViewById(R.id.tvSelectDate)
         tvTime = findViewById(R.id.tvSelectTime)
-        etPrice = findViewById(R.id.etPrice)
         btnSave = findViewById(R.id.btnSaveShowtime)
     }
 
@@ -84,7 +82,7 @@ class AddShowtimeActivity : AppCompatActivity() {
             for (doc in result) {
                 val room = doc.toObject(CinemaRoom::class.java)
                 roomList.add(room)
-                roomNames.add(room.name)
+                roomNames.add(room.roomName)
             }
             spinnerRooms.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, roomNames)
         }
@@ -116,10 +114,6 @@ class AddShowtimeActivity : AppCompatActivity() {
             Toast.makeText(this, "Vui lòng chọn ngày giờ!", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (etPrice.text.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập giá vé!", Toast.LENGTH_SHORT).show()
-            return false
-        }
         return true
     }
 
@@ -137,7 +131,7 @@ class AddShowtimeActivity : AppCompatActivity() {
 
         // Query Firestore: Lấy các suất chiếu đã có trong PHÒNG này vào NGÀY này
         db.collection("showtimes")
-            .whereEqualTo("roomId", selectedRoom.id)
+            .whereEqualTo("roomId", selectedRoom.roomId)
             .whereEqualTo("date", selectedDate)
             .get()
             .addOnSuccessListener { documents ->
@@ -171,7 +165,6 @@ class AddShowtimeActivity : AppCompatActivity() {
 
     // --- 3. HÀM LƯU (Đã update) ---
     private fun saveToFirebase(movie: Movie, room: CinemaRoom, time: String) {
-        val price = etPrice.text.toString().toDoubleOrNull() ?: 0.0
         val showtimeId = db.collection("showtimes").document().id
 
         val showtimeData = hashMapOf(
@@ -179,11 +172,10 @@ class AddShowtimeActivity : AppCompatActivity() {
             "movieId" to movie.id,
             "movieTitle" to movie.title,
             "posterUrl" to movie.posterUrl,
-            "roomId" to room.id,
-            "roomName" to room.name,
+            "roomId" to room.roomId,
+            "roomName" to room.roomName,
             "date" to tvDate.text.toString(),
             "time" to time,
-            "price" to price,
             "duration" to movie.duration,
             "bookedSeats" to listOf<Long>()
         )

@@ -28,7 +28,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnBack" />
 
+    <ImageView
+        android:id="@+id/btnDownload"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/ic_download"
+        app:tint="@color/text_primary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
     <androidx.cardview.widget.CardView
+        android:id="@+id/cardTicket"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="24dp"
@@ -53,7 +62,7 @@
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="160dp"
-                    android:layout_height="220dp"
+                    android:layout_height="250dp"
                     app:cardCornerRadius="8dp"
                     app:cardElevation="0dp">
                     <ImageView
@@ -66,9 +75,9 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:layout_marginStart="16dp"
-                    android:gravity="center_vertical"
                     android:orientation="vertical">
 
                     <TextView android:text="Movie Title:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
@@ -77,12 +86,17 @@
                     <TextView android:text="Cinema:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/tvCinema" android:text="Cinestar Sinh Viên" android:textColor="#000000" android:layout_marginBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
+                    <TextView android:text="Room:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvRoomName" android:text="Phòng 01" android:textColor="#000000" android:layout_marginBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
                     <TextView android:text="Date:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/tvDate" android:text="15th Nov, 2025" android:textColor="#000000" android:layout_marginBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
                     <TextView android:text="Time:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <TextView android:id="@+id/tvTime" android:text="20:20 PM" android:textColor="#000000" android:layout_marginBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
+                    <TextView android:text="Duration:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvDuration" android:text="120 mins" android:textColor="#000000" android:layout_marginBottom="8dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -93,18 +107,8 @@
                 android:layout_marginVertical="24dp"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_scissors"
-                    app:tint="@color/text_grey"/>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="2dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@color/text_grey"
-                    android:layerType="software" />
+                <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_scissors" app:tint="@color/text_grey"/>
+                <View android:layout_width="match_parent" android:layout_height="2dp" android:layout_marginStart="8dp" android:background="@color/text_grey" android:layerType="software" />
             </LinearLayout>
 
             <LinearLayout
@@ -122,8 +126,8 @@
 
                     <ImageView
                         android:id="@+id/imgQRCode"
-                        android:layout_width="160dp"
-                        android:layout_height="160dp"
+                        android:layout_width="200dp"
+                        android:layout_height="200dp"
                         android:layout_marginBottom="8dp"
                         android:src="@drawable/ic_launcher_background"/>
 
@@ -154,18 +158,32 @@
                     android:orientation="vertical">
 
                     <TextView android:text="No. of Tickets:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                    <TextView android:id="@+id/tvTicketCount" android:text="1" android:textColor="#000000" android:textStyle="bold" android:layout_marginBottom="12dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvTicketCount" android:text="2" android:textColor="#000000" android:textStyle="bold" android:layout_marginBottom="10dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
                     <TextView android:text="Seat No:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                    <TextView android:id="@+id/tvSeatNo" android:text="D5" android:textColor="#000000" android:textStyle="bold" android:textSize="20sp" android:layout_marginBottom="12dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvSeatNo" android:text="D5, D6" android:textColor="#000000" android:textStyle="bold" android:textSize="18sp" android:layout_marginBottom="10dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+                    <TextView android:text="Type:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvSeatType" android:text="VIP, Couple" android:textColor="#000000" android:layout_marginBottom="10dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+                    <TextView android:text="Combo:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView
+                        android:id="@+id/tvFoodInfo"
+                        android:text="Không chọn"
+                        android:textColor="#000000"
+                        android:maxLines="3"
+                        android:ellipsize="end"
+                        android:layout_marginBottom="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
 
                     <TextView android:text="Payment Method:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                    <TextView android:id="@+id/tvPaymentMethod" android:text="ZaloPay" android:textColor="#000000" android:layout_marginBottom="12dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvPaymentMethod" android:text="ZaloPay" android:textColor="#000000" android:layout_marginBottom="10dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#DDD" android:layout_marginVertical="12dp"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#DDD" android:layout_marginVertical="8dp"/>
 
                     <TextView android:text="Total Price:" android:textStyle="bold" android:textSize="12sp" android:textColor="#888" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                    <TextView android:id="@+id/tvTotalPrice" android:text="45.000 VND" android:textSize="18sp" android:textStyle="bold" android:textColor="#000000" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                    <TextView android:id="@+id/tvTotalPrice" android:text="135.000 VND" android:textSize="18sp" android:textStyle="bold" android:textColor="#000000" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
                 </LinearLayout>
             </LinearLayout>

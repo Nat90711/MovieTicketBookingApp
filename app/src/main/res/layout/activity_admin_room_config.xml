@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_bg"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/layoutHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tvHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="Cấu hình Sơ đồ ghế"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSeatConfig"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:padding="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/tvInstruction"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader"
+        tools:itemCount="50"
+        tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        tools:listitem="@layout/item_seat"
+        tools:spanCount="5" />
+
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:text="Chọn loại ghế bên dưới rồi bấm vào sơ đồ:"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toTopOf="@id/layoutControls"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/layoutControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:orientation="horizontal"
+        android:weightSum="4"
+        app:layout_constraintBottom_toTopOf="@id/btnSaveRoom">
+
+        <!-- 1. Ghế Thường -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnModeStandard"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="Thường"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            app:backgroundTint="#757575"
+            app:cornerRadius="8dp"
+            app:strokeColor="@color/text_primary"
+            app:strokeWidth="1dp" />
+
+        <!-- 2. Ghế VIP -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnModeVIP"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="VIP"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            app:backgroundTint="#F44336"
+            app:cornerRadius="8dp"
+            app:strokeColor="@color/text_primary"
+            app:strokeWidth="1dp" />
+
+        <!-- 3. Ghế Đôi -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnModeDouble"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="Đôi"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            app:backgroundTint="#E91E63"
+            app:cornerRadius="8dp"
+            app:strokeColor="@color/text_primary"
+            app:strokeWidth="1dp" />
+
+        <!-- 4. Lối đi -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnModeAisle"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="Lối đi"
+            android:textColor="@color/text_primary"
+            android:textSize="10sp"
+            app:backgroundTint="@color/app_bg"
+            app:cornerRadius="8dp"
+            app:strokeColor="@color/text_primary"
+            app:strokeWidth="1dp" />
+
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSaveRoom"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:backgroundTint="@color/button_bg"
+        android:text="Lưu"
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:cornerRadius="8dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:name=".ui.main.MyApplication"
@@ -50,6 +51,8 @@
 
         </activity>
         <activity android:name=".ui.booking.PaymentSuccessActivity" />
+        <activity android:name=".ui.booking.SelectTicketTypeActivity" />
+        <activity android:name=".ui.booking.FoodSelectionActivity" />
         <activity android:name=".ui.ticket.TicketDetailActivity" />
         <activity android:name=".ui.ticket.MyTicketsActivity" />
         <activity android:name=".ui.main.ProfileActivity" />
@@ -58,8 +61,11 @@
         <activity android:name=".ui.admin.AdminRoomActivity" />
         <activity android:name=".ui.admin.AddShowtimeActivity" />
         <activity android:name=".ui.admin.AdminShowtimeActivity" />
-
-
+        <activity android:name=".ui.admin.RoomConfigActivity" />
+        <activity android:name=".ui.admin.EditShowtimeActivity" />
+        <activity android:name=".ui.admin.AdminStatsActivity" />
+        <activity android:name=".ui.admin.AdminFoodActivity" />
+        <activity android:name=".ui.admin.AdminBookingActivity" />
     </application>
 
 </manifest>

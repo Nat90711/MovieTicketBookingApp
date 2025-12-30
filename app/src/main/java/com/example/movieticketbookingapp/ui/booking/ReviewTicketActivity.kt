@@ -2,6 +2,7 @@ package com.example.movieticketbookingapp.ui.booking
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -34,10 +35,15 @@ class ReviewTicketActivity : AppCompatActivity() {
         // 1. Nhận dữ liệu từ Intent
         val movie = intent.getParcelableExtra<Movie>("movie_data")
         val cinema = intent.getStringExtra("cinema_name") ?: "Unknown Cinema"
+        val roomName = intent.getStringExtra("room_name") ?: ""
         val date = intent.getStringExtra("selected_date") ?: "01"
         val time = intent.getStringExtra("selected_time") ?: "00:00"
+        val duration = intent.getStringExtra("duration") ?: "N/A"
+        val seatType = intent.getStringExtra("seat_type") ?: "Standard"
         val totalPrice = intent.getDoubleExtra("total_price", 0.0)
         expireTimeSeconds = intent.getLongExtra("expire_time_seconds", 0)
+        val foods = intent.getStringArrayListExtra("selected_foods") ?: arrayListOf()
+        val foodPrice = intent.getDoubleExtra("food_price", 0.0)
 
         // Nhận ID suất chiếu và Danh sách ID ghế (để lưu DB)
         val showtimeId = intent.getStringExtra("showtime_id") ?: ""
@@ -51,15 +57,25 @@ class ReviewTicketActivity : AppCompatActivity() {
         val tvDateTime: TextView = findViewById(R.id.tvDateTime)
 
         val tvTicketCount: TextView = findViewById(R.id.tvTicketCount)
+        val tvTicketType: TextView = findViewById(R.id.tvTicketType)
         val tvPrice: TextView = findViewById(R.id.tvPrice)
+        val tvFoodInfo: TextView = findViewById(R.id.tvFoodInfo)
         val tvSeatNo: TextView = findViewById(R.id.tvSeatNo)
         val tvTotalPrice: TextView = findViewById(R.id.tvTotalPrice)
         val btnPay: MaterialButton = findViewById(R.id.btnPay)
+
 
         // 3. Hiển thị dữ liệu lên màn hình
         if (movie != null) {
             tvMovieTitle.text = movie.title
             Glide.with(this).load(movie.posterUrl).centerCrop().into(imgPoster)
+        }
+
+        if (foods.isNotEmpty()) {
+            tvFoodInfo.text = foods.joinToString(", ")
+            tvFoodInfo.visibility = View.VISIBLE
+        } else {
+            tvFoodInfo.text = "Không chọn đồ ăn"
         }
 
         tvCinema.text = cinema
@@ -72,6 +88,8 @@ class ReviewTicketActivity : AppCompatActivity() {
         // Format tiền tệ
         val formatter = DecimalFormat("#,### VND")
         val priceString = formatter.format(totalPrice)
+
+        tvTicketType.text = seatType
 
         tvPrice.text = priceString
         tvTotalPrice.text = priceString
@@ -93,6 +111,10 @@ class ReviewTicketActivity : AppCompatActivity() {
             intent.putExtra("date_time", "$time, $date")
             intent.putExtra("poster_url", movie?.posterUrl)
             intent.putExtra("expire_time_seconds", expireTimeSeconds)
+            intent.putExtra("duration", duration)
+            intent.putExtra("seat_type", seatType)
+            intent.putExtra("room_name", roomName)
+            intent.putStringArrayListExtra("selected_foods", foods)
 
             startActivity(intent)
         }

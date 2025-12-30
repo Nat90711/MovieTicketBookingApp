@@ -36,22 +36,29 @@ class AdminShowtimeActivity : AppCompatActivity() {
 
         setupRecyclerView()
 
-        // Nút Back
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
         btnAdd.setOnClickListener {
             startActivity(Intent(this, AddShowtimeActivity::class.java))
         }
 
-        // Lắng nghe dữ liệu realtime
         listenToShowtimes()
     }
 
     private fun setupRecyclerView() {
-        adapter = ShowtimeAdapter(showtimeList) { showtime ->
-            // Sự kiện khi bấm nút Xóa
-            confirmDelete(showtime)
-        }
+        // Cập nhật Adapter nhận thêm onEditClick
+        adapter = ShowtimeAdapter(
+            showtimeList,
+            onEditClick = { showtime ->
+                // CHUYỂN SANG MÀN HÌNH SỬA
+                val intent = Intent(this, EditShowtimeActivity::class.java)
+                intent.putExtra("showtime_id", showtime.id)
+                startActivity(intent)
+            },
+            onDeleteClick = { showtime ->
+                confirmDelete(showtime)
+            }
+        )
         rvShowtimes.adapter = adapter
         rvShowtimes.layoutManager = LinearLayoutManager(this)
     }
@@ -64,11 +71,9 @@ class AdminShowtimeActivity : AppCompatActivity() {
                     showtimeList.clear()
                     for (doc in value) {
                         val st = doc.toObject(Showtime::class.java)
-                        // Gán lại ID từ document nếu model chưa có
                         st.id = doc.id
                         showtimeList.add(st)
                     }
-                    // Sắp xếp theo ngày giảm dần hoặc tên phim tùy bạn
                     showtimeList.sortByDescending { it.date }
                     adapter.notifyDataSetChanged()
                 }
@@ -76,31 +81,55 @@ class AdminShowtimeActivity : AppCompatActivity() {
     }
 
     private fun confirmDelete(showtime: Showtime) {
+        // Bước 1: Hỏi xác nhận user trước
         AlertDialog.Builder(this)
             .setTitle("Xóa Lịch Chiếu")
-            .setMessage("Bạn có chắc muốn xóa lịch chiếu phim '${showtime.movieTitle}' lúc ${showtime.time} không?\n(Dữ liệu đặt vé liên quan cũng nên được xử lý)")
+            .setMessage("Bạn có chắc muốn xóa lịch chiếu phim '${showtime.movieTitle}' lúc ${showtime.time} không?")
             .setPositiveButton("Xóa") { _, _ ->
-                deleteShowtime(showtime.id)
+                checkAndPerformDelete(showtime) // Gọi hàm kiểm tra
             }
             .setNegativeButton("Hủy", null)
             .show()
     }
 
-    private fun deleteShowtime(id: String) {
-        db.collection("showtimes").document(id)
-            .delete()
-            .addOnSuccessListener {
-                Toast.makeText(this, "Đã xóa thành công!", Toast.LENGTH_SHORT).show()
+    private fun checkAndPerformDelete(showtime: Showtime) {
+        // Bước 2: Kiểm tra dữ liệu mới nhất trên Server (để tránh trường hợp vừa có người mua xong)
+        db.collection("showtimes").document(showtime.id).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val bookedSeats = document.get("bookedSeats") as? List<*>
+
+                    // RÀNG BUỘC 2: Kiểm tra vé đã bán
+                    if (bookedSeats != null && bookedSeats.isNotEmpty()) {
+                        // Đã có vé bán -> CHẶN XÓA
+                        AlertDialog.Builder(this)
+                            .setTitle("Không thể xóa!")
+                            .setMessage("Suất chiếu này đã bán được ${bookedSeats.size} vé.\nViệc xóa suất chiếu sẽ làm mất dữ liệu vé của khách hàng.")
+                            .setPositiveButton("Đóng", null)
+                            .show()
+                    } else {
+                        // Chưa có vé -> XÓA
+                        deleteShowtime(showtime.id)
+                    }
+                }
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Lỗi khi xóa: ${it.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Lỗi kết nối Server", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun deleteShowtime(showtimeId: String) {
+        db.collection("showtimes").document(showtimeId).delete()
+            .addOnSuccessListener {
+                Toast.makeText(this, "Đã xóa thành công!", Toast.LENGTH_SHORT).show()
             }
     }
 
     // --- INNER ADAPTER CLASS ---
     inner class ShowtimeAdapter(
         private val list: List<Showtime>,
-        private val onDeleteClick: (Showtime) -> Unit
+        private val onEditClick: (Showtime) -> Unit, // Callback Sửa
+        private val onDeleteClick: (Showtime) -> Unit // Callback Xóa
     ) : RecyclerView.Adapter<ShowtimeAdapter.ViewHolder>() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -108,6 +137,7 @@ class AdminShowtimeActivity : AppCompatActivity() {
             val tvMovie: TextView = view.findViewById(R.id.tvMovieTitle)
             val tvRoom: TextView = view.findViewById(R.id.tvRoomName)
             val tvDate: TextView = view.findViewById(R.id.tvDateTime)
+            val btnEdit: ImageView = view.findViewById(R.id.btnEdit) // Nút Sửa mới
             val btnDelete: ImageView = view.findViewById(R.id.btnDelete)
         }
 
@@ -128,6 +158,12 @@ class AdminShowtimeActivity : AppCompatActivity() {
                 .placeholder(R.drawable.ic_launcher_background)
                 .into(holder.imgPoster)
 
+            // Bắt sự kiện Sửa
+            holder.btnEdit.setOnClickListener {
+                onEditClick(item)
+            }
+
+            // Bắt sự kiện Xóa
             holder.btnDelete.setOnClickListener {
                 onDeleteClick(item)
             }

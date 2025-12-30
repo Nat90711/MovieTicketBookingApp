@@ -36,9 +36,18 @@ class AdminDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, AdminShowtimeActivity::class.java))
         }
 
-        // 4. Doanh thu (Để sau)
+        // 4. Doanh thu
         findViewById<CardView>(R.id.cardStats).setOnClickListener {
-            // startActivity(Intent(this, AdminStatsActivity::class.java))
+            startActivity(Intent(this, AdminStatsActivity::class.java))
+        }
+
+        findViewById<CardView>(R.id.cardManageFood).setOnClickListener {
+            startActivity(Intent(this, AdminFoodActivity::class.java))
+        }
+
+        findViewById<CardView>(R.id.cardManageBookings).setOnClickListener {
+            // Chuyển sang màn hình danh sách vé (Bạn đã tạo ở bước trước)
+            startActivity(Intent(this, AdminBookingActivity::class.java))
         }
 
         // 5. Logout - Sửa lại để gọi Dialog xác nhận

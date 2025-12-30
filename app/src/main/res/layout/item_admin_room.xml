@@ -8,27 +8,44 @@
     app:cardCornerRadius="8dp"
     app:cardElevation="2dp">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:orientation="vertical">
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvRoomName"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Phòng 01"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:textSize="18sp"/>
+            android:layout_toStartOf="@+id/btnDeleteRoom"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvRoomInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Loại: 2D | Sức chứa: 80 ghế"
-            android:layout_marginTop="4dp"
-            android:textColor="#666"/>
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvRoomName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Phòng 01"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvRoomInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Loại: 2D | Sức chứa: 80 ghế"
+                android:textColor="#666" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btnDeleteRoom"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="4dp"
+            android:src="@drawable/ic_delete"
+            app:tint="#F44336" />
+    </RelativeLayout>
 </androidx.cardview.widget.CardView>

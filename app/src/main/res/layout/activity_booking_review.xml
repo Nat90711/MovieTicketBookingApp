@@ -96,7 +96,7 @@
             android:layout_marginBottom="2dp"/>
 
         <TextView
-            android:text="Movie Duration"
+            android:text="Duration:"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:layout_width="wrap_content"
@@ -125,7 +125,7 @@
 
             <TextView
                 android:id="@+id/lblType"
-                android:text="Ticket Type:"
+                android:text="Seat Type:"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_width="wrap_content"
@@ -133,12 +133,32 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
             <TextView
+                android:id="@+id/tvTicketType"
                 android:text="Standard"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lblType"/>
+
+            <TextView
+                android:id="@+id/lblPrice"
+                android:text="Ticket Price:"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTicketType"/>
+            <TextView
+                android:id="@+id/tvPrice"
+                android:text="90.000 VND"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lblPrice"/>
 
             <TextView
                 android:id="@+id/lblCount"
@@ -159,32 +179,13 @@
                 app:layout_constraintTop_toBottomOf="@id/lblCount"/>
 
             <TextView
-                android:id="@+id/lblPrice"
-                android:text="Ticket Price:"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvTicketCount"/>
-            <TextView
-                android:id="@+id/tvPrice"
-                android:text="90.000 VND"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/lblPrice"/>
-
-            <TextView
                 android:id="@+id/lblSeat"
                 android:text="Seat No:"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="16dp"
                 app:layout_constraintStart_toStartOf="@id/lblCount"
                 app:layout_constraintTop_toBottomOf="@id/tvTicketCount"/>
             <TextView
@@ -198,6 +199,29 @@
                 app:layout_constraintStart_toStartOf="@id/lblCount"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/lblSeat"/>
+
+            <TextView
+                android:id="@+id/lblFood"
+                android:text="Combo:"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvPrice"/>
+
+            <TextView
+                android:id="@+id/tvFoodInfo"
+                android:text="1x Bắp, 2x Nước"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:maxLines="10"
+                android:ellipsize="end"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lblFood"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

@@ -8,5 +8,9 @@ data class Booking(
     val dateTime: String = "",
     val seats: List<String> = emptyList(),
     val totalPrice: Double = 0.0,
-    val paymentMethod: String = ""
+    val paymentMethod: String = "",
+    val duration: Int = 120,
+    val seatType: String = "",
+    val roomName: String = "",
+    val foods: String = ""
 )

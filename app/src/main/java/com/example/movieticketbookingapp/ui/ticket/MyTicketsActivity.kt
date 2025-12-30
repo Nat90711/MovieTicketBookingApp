@@ -84,6 +84,11 @@ class MyTicketsActivity : AppCompatActivity() {
             intent.putExtra("poster_url", booking.posterUrl)
             intent.putExtra("booking_id", booking.id)
             intent.putExtra("payment_method", booking.paymentMethod)
+            intent.putExtra("duration", booking.duration.toString())
+            intent.putExtra("seat_type", booking.seatType ?: "Standard/Mixed")
+            intent.putExtra("room_name", booking.roomName)
+            intent.putExtra("foods", booking.foods)
+
             startActivity(intent)
         }
         rvTickets.adapter = adapter

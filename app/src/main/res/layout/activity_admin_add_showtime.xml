@@ -114,28 +114,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/lblPrice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Giá Vé (VND):"
-        android:textStyle="bold"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutDateTime"
-        app:layout_constraintStart_toStartOf="parent"/>
-
-    <EditText
-        android:id="@+id/etPrice"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="Ví dụ: 90000"
-        android:inputType="number"
-        android:background="@drawable/bg_input_border"
-        android:paddingHorizontal="12dp"
-        android:textColorHint="@color/text_grey"
-        android:textColor="#000000"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/lblPrice"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSaveShowtime"

@@ -125,7 +125,8 @@ class ProfileActivity : AppCompatActivity() {
     private fun showSettingsMenu(anchorView: View) {
         val view = LayoutInflater.from(this).inflate(R.layout.layout_custom_popup_menu, null)
 
-        val widthInDp = 200f
+        // Tăng chiều rộng popup lên một chút cho đẹp (200dp -> 220dp)
+        val widthInDp = 220f
         val density = resources.displayMetrics.density
         val widthInPx = (widthInDp * density).toInt()
 
@@ -141,30 +142,34 @@ class ProfileActivity : AppCompatActivity() {
 
         // 1. Ánh xạ các View
         val btnDarkModeItem = view.findViewById<View>(R.id.menuItemDarkMode)
+        val btnSupportItem = view.findViewById<View>(R.id.menuItemSupport) // <--- MỚI
         val btnLogoutItem = view.findViewById<View>(R.id.menuItemLogout)
 
         val imgDarkMode = view.findViewById<ImageView>(R.id.imgDarkMode)
         val tvDarkMode = view.findViewById<TextView>(R.id.tvDarkMode)
 
-        // 2. KIỂM TRA CHẾ ĐỘ HIỆN TẠI (Quan trọng)
+        // 2. KIỂM TRA CHẾ ĐỘ HIỆN TẠI
         val currentNightMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
         val isDarkMode = currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
 
-        // 3. Cập nhật Giao diện Menu theo chế độ
         if (isDarkMode) {
-            // Đang tối -> Gợi ý chuyển sang sáng
             tvDarkMode.text = "Light Mode"
-            imgDarkMode.setImageResource(R.drawable.ic_sun) // Nhớ tạo icon ic_sun
+            imgDarkMode.setImageResource(R.drawable.ic_sun)
         } else {
-            // Đang sáng -> Gợi ý chuyển sang tối
             tvDarkMode.text = "Dark Mode"
             imgDarkMode.setImageResource(R.drawable.ic_moon)
         }
 
-        // 4. Bắt sự kiện Click
+        // 3. Bắt sự kiện Click
         btnDarkModeItem.setOnClickListener {
             toggleDarkMode()
             popupWindow.dismiss()
+        }
+
+        // --- SỰ KIỆN NÚT HỖ TRỢ ---
+        btnSupportItem.setOnClickListener {
+            popupWindow.dismiss()
+            showSupportDialog() // Gọi hàm hiển thị dialog hỗ trợ
         }
 
         btnLogoutItem.setOnClickListener {
@@ -173,6 +178,44 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         popupWindow.showAsDropDown(anchorView, -100, 0)
+    }
+
+    private fun showSupportDialog() {
+        // Sử dụng BottomSheetDialog để hiển thị đẹp mắt từ dưới lên
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+        // Lưu ý: Bạn cần tạo file layout_bottom_sheet_support.xml (Xem Bước 3)
+        // Nếu lười tạo file mới, bạn có thể dùng AlertDialog đơn giản ở dưới
+        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_support, null)
+        dialog.setContentView(view)
+
+        // Ánh xạ (Đảm bảo ID khớp với layout bạn tạo)
+        val btnCall = view.findViewById<View>(R.id.btnCallHotline)
+        val btnEmail = view.findViewById<View>(R.id.btnSendEmail)
+
+        // 1. GỌI HOTLINE
+        btnCall.setOnClickListener {
+            dialog.dismiss()
+            val intent = Intent(Intent.ACTION_DIAL)
+            intent.data = android.net.Uri.parse("tel:19001234") // Số điện thoại rạp
+            startActivity(intent)
+        }
+
+        // 2. GỬI EMAIL
+        btnEmail.setOnClickListener {
+            dialog.dismiss()
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = android.net.Uri.parse("mailto:")
+                putExtra(Intent.EXTRA_EMAIL, arrayOf("support@cinestar.vn")) // Email rạp
+                putExtra(Intent.EXTRA_SUBJECT, "Hỗ trợ khách hàng - App Đặt vé")
+            }
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Không tìm thấy ứng dụng Email", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
     }
 
     private fun toggleDarkMode() {

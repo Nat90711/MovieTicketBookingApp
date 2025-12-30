@@ -10,277 +10,396 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.movieticketbookingapp.R
 import com.example.movieticketbookingapp.adapter.Seat
-import com.example.movieticketbookingapp.adapter.SeatAdapter
 import com.example.movieticketbookingapp.adapter.SeatStatus
+import com.example.movieticketbookingapp.adapter.UserSeatAdapter
 import com.example.movieticketbookingapp.model.Movie
 import com.google.android.material.button.MaterialButton
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.Timestamp
 import java.text.DecimalFormat
 
 class SeatSelectionActivity : AppCompatActivity() {
 
+    // Views & Firebase
     private lateinit var rvSeat: RecyclerView
     private lateinit var btnConfirm: MaterialButton
-    private lateinit var tvTitle: TextView
     private lateinit var tvSeatInfo: TextView
-
-    // Firebase
     private lateinit var db: FirebaseFirestore
-    private var showtimeId: String = ""
+    private lateinit var auth: FirebaseAuth
+    private var roomName: String = ""
 
-    // Dữ liệu ghế
-    private val allSeats = ArrayList<Seat>() // Danh sách quản lý toàn bộ 100 ghế
-    private val selectedSeats = ArrayList<Seat>() // Danh sách ghế đang chọn
-    private val pricePerSeat = 50000.0 // Giá vé mặc định
-    private var listSoldSeats: Set<Long> = HashSet()   // Danh sách ghế đã bán thật (BookedSeats)
-    private var listLockedSeats: Set<Long> = HashSet() // Danh sách ghế đang bị người khác giữ (Locks)
+    // Data flow
+    private var showtimeId: String = ""
+    private var movie: Movie? = null
+
+    // --- DỮ LIỆU MỚI TỪ MÀN HÌNH CHỌN LOẠI VÉ ---
+    private var isCoupleMode = false      // Chế độ: True (chỉ chọn đôi), False (chỉ chọn đơn)
+    private var totalTickets = 0          // Số lượng VÉ đã mua
+    private var maxSeatsToSelect = 0      // Số lượng GHẾ cần chọn (Vé đôi x2)
+    private var fixedTotalPrice = 0.0     // Tổng tiền đã chốt
+    private var ticketTypeDetails = ""    // Chuỗi mô tả (VD: "1 Người lớn, 1 HSSV")
+
+    // Logic ghế
+    private val allSeats = ArrayList<Seat>()
+    private val selectedSeats = ArrayList<Seat>()
+    private var totalCols = 10
+
+    // Logic trạng thái ghế
+    private var listSoldSeats: Set<Long> = HashSet()
+    private var listLockedSeats: Set<Long> = HashSet()
     private var myLockedSeatIds: ArrayList<String> = ArrayList()
 
-    // Adapter
-    private lateinit var adapter: SeatAdapter
+    private lateinit var adapter: UserSeatAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_booking_seat_select)
 
-        // 1. Khởi tạo Firestore
         db = FirebaseFirestore.getInstance()
-
+        auth = FirebaseAuth.getInstance()
         initViews()
 
-        // 2. Nhận dữ liệu từ BookingActivity
-        val movie = intent.getParcelableExtra<Movie>("movie_data")
-        showtimeId = intent.getStringExtra("showtime_id") ?: "" // ID suất chiếu để lắng nghe realtime
-        clearMyOldLocks()
+        // 1. Nhận dữ liệu
+        movie = intent.getParcelableExtra("movie_data")
+        showtimeId = intent.getStringExtra("showtime_id") ?: ""
 
+        // --- NHẬN DATA TỪ SELECT TICKET ACTIVITY ---
+        isCoupleMode = intent.getBooleanExtra("is_couple_mode", false)
+        totalTickets = intent.getIntExtra("total_quantity", 0)
+        fixedTotalPrice = intent.getDoubleExtra("total_price", 0.0)
+        ticketTypeDetails = intent.getStringExtra("ticket_type_details") ?: ""
 
-        // 3. Tạo danh sách ghế (Ban đầu giả định là Trống hết)
-        initSeatList()
+        // Tính toán số ghế cần chọn:
+        // - Vé Đôi: 1 vé = 2 ghế thực tế trên sơ đồ
+        // - Vé Đơn: 1 vé = 1 ghế
+        maxSeatsToSelect = if (isCoupleMode) totalTickets * 2 else totalTickets
 
-        // 4. Setup giao diện lưới ghế
-        setupRecyclerView()
-
-        // Nếu có ai đặt ghế, hàm này sẽ chạy và cập nhật giao diện ngay lập tức
-        if (showtimeId.isNotEmpty()) {
-            clearMyOldLocks()
-            startRealtimeUpdates()
-        }
+        // 2. Load cấu hình phòng
+        loadRoomConfiguration()
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
-        // 6. Xử lý nút Xác nhận
-        btnConfirm.setOnClickListener {
-            if (selectedSeats.isEmpty()) {
-                Toast.makeText(this, "Vui lòng chọn ít nhất 1 ghế!", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+        setupConfirmButton()
 
-            val showtimeRef = db.collection("showtimes").document(showtimeId)
-            val locksRef = showtimeRef.collection("locks")
-
-            // 1. CHUẨN BỊ DỮ LIỆU (Tính toán trước các thông tin cần thiết)
-            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-            val expireTimeSeconds = com.google.firebase.Timestamp.now().seconds + 300
-            val expireTimestamp = com.google.firebase.Timestamp(expireTimeSeconds, 0)
-
-            val seatsToLock = ArrayList(selectedSeats) // Copy danh sách ghế muốn mua
-            val seatIds = ArrayList<String>()
-            val seatNames = ArrayList<String>()
-
-            // Vòng lặp này chỉ để tính toán Tên ghế (A1, B2) và ID để gửi sang màn hình sau
-            // Không thực hiện lệnh DB nào ở đây cả
-            for (seat in seatsToLock) {
-                seatIds.add(seat.id.toString())
-
-                // Logic tính tên ghế (Code cũ của bạn giữ nguyên)
-                val rowChar = (seat.id / 10 + 65).toChar()
-                val colIndex = seat.id % 10
-                var realSeatNumber = colIndex + 1
-                if (colIndex > 2) realSeatNumber -= 1
-                if (colIndex > 7) realSeatNumber -= 1
-                seatNames.add("$rowChar$realSeatNumber")
-            }
-
-            // 2. CHẠY TRANSACTION (Thay thế cho Batch)
-            db.runTransaction { transaction ->
-                // --- BƯỚC A: ĐỌC VÀ KIỂM TRA (READ) ---
-                // Kiểm tra xem tất cả ghế mình chọn có bị ai tranh mất chưa
-                for (seat in seatsToLock) {
-                    val seatIdStr = seat.id.toString()
-                    val lockDoc = transaction.get(locksRef.document(seatIdStr)) // Đọc dữ liệu mới nhất
-
-                    if (lockDoc.exists()) {
-                        val holderId = lockDoc.getString("userId")
-                        val expireAt = lockDoc.getTimestamp("expireAt")?.seconds ?: 0
-                        val currentTime = com.google.firebase.Timestamp.now().seconds
-
-                        // Nếu ghế đang bị người khác giữ và còn hạn -> HỦY GIAO DỊCH NGAY
-                        if (expireAt > currentTime && holderId != userId) {
-                            throw com.google.firebase.firestore.FirebaseFirestoreException(
-                                "Ghế ${seatNames[seatsToLock.indexOf(seat)]} đã có người chọn!",
-                                com.google.firebase.firestore.FirebaseFirestoreException.Code.ABORTED
-                            )
-                        }
-                    }
-                }
-
-                // --- BƯỚC B: GHI DỮ LIỆU (WRITE) ---
-                // Nếu code chạy được xuống đây nghĩa là ghế an toàn -> Tiến hành ghi
-
-                // B1. Xóa các ghế cũ (Logic dọn dẹp ghế cũ của bạn đưa vào Transaction cho an toàn)
-                for (oldId in myLockedSeatIds) {
-                    // Nếu ghế cũ không nằm trong danh sách ghế mới -> Xóa nó đi
-                    if (!seatIds.contains(oldId)) {
-                        transaction.delete(locksRef.document(oldId))
-                    }
-                }
-
-                // B2. Ghi khóa mới cho các ghế đang chọn
-                for (seat in seatsToLock) {
-                    val lockData = hashMapOf(
-                        "userId" to userId,
-                        "expireAt" to expireTimestamp
-                    )
-                    transaction.set(locksRef.document(seat.id.toString()), lockData)
-                }
-
-                null // Return null báo hiệu thành công
-            }.addOnSuccessListener {
-                // --- THÀNH CÔNG ---
-                // Cập nhật lại danh sách theo dõi cục bộ
-                myLockedSeatIds.clear()
-                myLockedSeatIds.addAll(seatIds)
-
-                // Chuyển màn hình (Code cũ giữ nguyên)
-                val intent = Intent(this, ReviewTicketActivity::class.java)
-                intent.putExtra("movie_data", movie)
-                intent.putExtra("movie_title", movie?.title)
-                intent.putExtra("poster_url", movie?.posterUrl)
-                intent.putExtra("cinema_name", getIntent().getStringExtra("cinema_name"))
-                intent.putExtra("selected_date", getIntent().getStringExtra("selected_date"))
-                intent.putExtra("selected_time", getIntent().getStringExtra("selected_time"))
-                intent.putExtra("showtime_id", showtimeId)
-                intent.putStringArrayListExtra("seat_ids", seatIds)
-                intent.putStringArrayListExtra("seat_names", seatNames)
-                intent.putExtra("total_price", selectedSeats.size * pricePerSeat)
-                intent.putExtra("expire_time_seconds", expireTimeSeconds)
-
-                startActivity(intent)
-
-            }.addOnFailureListener { e ->
-                // --- THẤT BẠI ---
-                btnConfirm.isEnabled = true
-                btnConfirm.text = "SELECT SEAT"
-
-                if (e is com.google.firebase.firestore.FirebaseFirestoreException &&
-                    e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.ABORTED) {
-                    // Lỗi do tranh chấp ghế (Transaction tự hủy)
-                    Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
-                    // Lúc này hàm Realtime Updates ở dưới sẽ tự chạy và tô vàng ghế bị mất
-                } else {
-                    // Lỗi mạng hoặc lỗi khác
-                    Toast.makeText(this, "Lỗi kết nối: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+        // Cập nhật text hiển thị ban đầu
+        updateSeatInfoText()
     }
 
     private fun initViews() {
         rvSeat = findViewById(R.id.rvSeat)
         btnConfirm = findViewById(R.id.btnConfirmSeat)
-        tvTitle = findViewById(R.id.tvTitle)
         tvSeatInfo = findViewById(R.id.tvSeatInfo)
     }
 
-    // Tạo danh sách 100 ghế ban đầu (Chưa biết cái nào đã đặt)
-    private fun initSeatList() {
-        allSeats.clear()
-        val totalRows = 10
-        val totalColumns = 10
+    private fun loadRoomConfiguration() {
+        db.collection("showtimes").document(showtimeId).get()
+            .addOnSuccessListener { showtimeDoc ->
+                val roomId = showtimeDoc.getString("roomId") ?: ""
+                roomName = showtimeDoc.getString("roomName") ?: "Unknown Room"
+                // Không cần lấy giá basePrice nữa vì đã có fixedTotalPrice
 
-        for (i in 0 until (totalRows * totalColumns)) {
-            val column = i % totalColumns
-
-            // Logic Lối đi (Cột 2 và 7)
-            val status = if (column == 2 || column == 7) {
-                SeatStatus.AISLE
-            } else {
-                SeatStatus.AVAILABLE // Mặc định là Available, sẽ update lại sau khi load từ Firebase
+                if (roomId.isNotEmpty()) {
+                    fetchRoomData(roomId)
+                }
             }
-            allSeats.add(Seat(i, status))
-        }
+            .addOnFailureListener {
+                Toast.makeText(this, "Lỗi tải suất chiếu!", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun setupRecyclerView() {
-        adapter = SeatAdapter(allSeats) { clickedSeat ->
-            // Logic chọn/bỏ chọn ghế
-            if (clickedSeat.status == SeatStatus.SELECTED) {
-                selectedSeats.add(clickedSeat)
-            } else {
-                selectedSeats.remove(clickedSeat)
+    private fun fetchRoomData(roomId: String) {
+        db.collection("rooms").document(roomId).get()
+            .addOnSuccessListener { roomDoc ->
+                if (roomDoc.exists()) {
+                    totalCols = roomDoc.getLong("totalCols")?.toInt() ?: 10
+                    val seatConfigList = roomDoc.get("seatConfiguration") as? List<Long> ?: emptyList()
+                    val configIntList = seatConfigList.map { it.toInt() }
+
+                    initSeatListFromConfig(configIntList, totalCols)
+                }
             }
-            updateSeatInfoText()
+    }
+
+    private fun initSeatListFromConfig(config: List<Int>, cols: Int) {
+        allSeats.clear()
+        for (i in config.indices) {
+            val type = if (i < config.size) config[i] else 0
+            val status = if (type == -1) SeatStatus.AISLE else SeatStatus.AVAILABLE
+            // Giá của từng ghế set = 0 vì ta dùng giá tổng cố định
+            allSeats.add(Seat(id = i, status = status, type = type, price = 0.0))
+        }
+
+        setupRecyclerView(cols)
+        clearMyOldLocks()
+        startRealtimeUpdates()
+    }
+
+    private fun setupRecyclerView(cols: Int) {
+        // --- TRUYỀN THÊM isCoupleMode VÀO ADAPTER ---
+        adapter = UserSeatAdapter(allSeats, cols, isCoupleMode) { clickedSeat ->
+            handleSeatClick(clickedSeat)
         }
         rvSeat.adapter = adapter
-        rvSeat.layoutManager = GridLayoutManager(this, 10) // 10 cột
+        rvSeat.layoutManager = GridLayoutManager(this, cols)
     }
 
+    private fun handleSeatClick(seat: Seat) {
+        if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) return
+
+        val isSelecting = (seat.status == SeatStatus.AVAILABLE)
+
+        if (isSelecting) {
+            // --- KIỂM TRA SỐ LƯỢNG GHẾ GIỚI HẠN ---
+            // Nếu là ghế đôi thì tính là 2 ghế, ghế đơn là 1
+            val seatsToAdd = if (seat.type == 2) 2 else 1
+
+            if (selectedSeats.size + seatsToAdd > maxSeatsToSelect) {
+                Toast.makeText(this, "Bạn đã mua $totalTickets vé, chỉ được chọn $maxSeatsToSelect ghế!", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        if (seat.type != 2) {
+            toggleSeatSelection(seat, isSelecting)
+        } else {
+            val partnerSeat = findCouplePartner(seat)
+            toggleSeatSelection(seat, isSelecting)
+            if (partnerSeat != null && partnerSeat.status != SeatStatus.BOOKED && partnerSeat.status != SeatStatus.HELD) {
+                toggleSeatSelection(partnerSeat, isSelecting)
+            }
+        }
+
+        updateSeatInfoText()
+    }
+
+    private fun toggleSeatSelection(seat: Seat, isSelecting: Boolean) {
+        if (isSelecting) {
+            seat.status = SeatStatus.SELECTED
+            if (!selectedSeats.contains(seat)) selectedSeats.add(seat)
+        } else {
+            seat.status = SeatStatus.AVAILABLE
+            selectedSeats.remove(seat)
+        }
+        adapter.notifyItemChanged(seat.id)
+    }
+
+    private fun findCouplePartner(seat: Seat): Seat? {
+        val pos = seat.id
+        val rowStart = (pos / totalCols) * totalCols
+        var consecutiveDoubles = 0
+        var i = pos - 1
+        while (i >= rowStart && allSeats[i].type == 2) {
+            consecutiveDoubles++
+            i--
+        }
+        val isLeft = (consecutiveDoubles % 2 == 0)
+        return if (isLeft) {
+            if (pos + 1 < allSeats.size && allSeats[pos+1].type == 2) allSeats[pos+1] else null
+        } else {
+            if (pos - 1 >= 0 && allSeats[pos-1].type == 2) allSeats[pos-1] else null
+        }
+    }
+
+    private fun updateSeatInfoText() {
+        val count = selectedSeats.size
+        // Hiển thị: Đã chọn / Tổng cần chọn
+        val formatter = DecimalFormat("#,###")
+        val priceString = formatter.format(fixedTotalPrice)
+
+        tvSeatInfo.text = "$count/$maxSeatsToSelect ghế - $priceString VND"
+
+        // Disable nút Confirm nếu chưa chọn đủ
+        if (count == maxSeatsToSelect) {
+            btnConfirm.isEnabled = true
+            btnConfirm.alpha = 1.0f
+            btnConfirm.text = "XÁC NHẬN"
+        } else {
+            btnConfirm.isEnabled = false
+            btnConfirm.alpha = 0.5f
+            btnConfirm.text = "CHỌN ĐỦ $maxSeatsToSelect GHẾ"
+        }
+    }
+
+    private fun setupConfirmButton() {
+        btnConfirm.setOnClickListener {
+            if (selectedSeats.size != maxSeatsToSelect) {
+                Toast.makeText(this, "Vui lòng chọn đủ ghế!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            performBookingTransaction()
+        }
+    }
+
+    private fun performBookingTransaction() {
+        val userId = auth.currentUser?.uid ?: return
+        val expireTimeSeconds = Timestamp.now().seconds + 300
+        val expireTimestamp = Timestamp(expireTimeSeconds, 0)
+
+        // 1. Chuẩn bị dữ liệu ghế (Gộp tên A1-A2)
+        val seatsToLock = ArrayList(selectedSeats)
+        seatsToLock.sortBy { it.id }
+
+        val seatIds = ArrayList<String>()
+        val seatNames = ArrayList<String>()
+        val processedDoubleSeatIds = HashSet<Int>()
+
+        for (seat in seatsToLock) {
+            seatIds.add(seat.id.toString())
+
+            if (processedDoubleSeatIds.contains(seat.id)) continue
+
+            val currentName = calculateSeatName(seat.id)
+            // --------------------
+
+            if (seat.type == 2) {
+                var partnerSeat: Seat? = null
+                if (isLeftSeatOfCouple(seat.id) && seatsToLock.any { it.id == seat.id + 1 }) {
+                    partnerSeat = seatsToLock.find { it.id == seat.id + 1 }
+                }
+
+                if (partnerSeat != null) {
+                    // --- SỬA CẢ ĐOẠN TÊN GHẾ ĐÔI ---
+                    // Cũ: val partnerColNum = ...
+                    // Mới: Tính tên cho ghế partner luôn
+                    val partnerName = calculateSeatName(partnerSeat.id)
+
+                    // Ghép lại: VD: "A1-A2"
+                    seatNames.add("$currentName-$partnerName")
+
+                    processedDoubleSeatIds.add(partnerSeat.id)
+                } else {
+                    seatNames.add(currentName)
+                }
+            } else {
+                seatNames.add(currentName)
+            }
+        }
+
+        val showtimeRef = db.collection("showtimes").document(showtimeId)
+        val locksRef = showtimeRef.collection("locks")
+
+        // 2. Transaction giữ ghế
+        db.runTransaction { transaction ->
+            // Check locked
+            for (seat in seatsToLock) {
+                val seatIdStr = seat.id.toString()
+                val lockDoc = transaction.get(locksRef.document(seatIdStr))
+                if (lockDoc.exists()) {
+                    val holderId = lockDoc.getString("userId")
+                    val expireAt = lockDoc.getTimestamp("expireAt")?.seconds ?: 0
+                    val currentTime = Timestamp.now().seconds
+                    if (expireAt > currentTime && holderId != userId) {
+                        throw com.google.firebase.firestore.FirebaseFirestoreException(
+                            "Ghế đã bị người khác chọn!",
+                            com.google.firebase.firestore.FirebaseFirestoreException.Code.ABORTED
+                        )
+                    }
+                }
+            }
+            // Clear old locks
+            for (oldId in myLockedSeatIds) {
+                if (!seatIds.contains(oldId)) transaction.delete(locksRef.document(oldId))
+            }
+            // New locks
+            for (seat in seatsToLock) {
+                val lockData = hashMapOf("userId" to userId, "expireAt" to expireTimestamp)
+                transaction.set(locksRef.document(seat.id.toString()), lockData)
+            }
+            null
+        }.addOnSuccessListener {
+            myLockedSeatIds.clear()
+            myLockedSeatIds.addAll(seatIds)
+
+            // Lấy duration từ movie
+            val durationString = movie?.duration.toString() // Nếu model Movie chưa có trường duration, bạn cần thêm vào hoặc sửa chỗ này
+
+            // 3. Chuyển sang ReviewTicketActivity
+            val intent = Intent(this, FoodSelectionActivity::class.java)
+
+            intent.putExtra("movie_data", movie)
+            intent.putExtra("showtime_id", showtimeId)
+            intent.putExtra("movie_title", movie?.title)
+            intent.putExtra("poster_url", movie?.posterUrl)
+
+            // --- CẬP NHẬT: TRUYỀN DỮ LIỆU ĐÃ CÓ SẴN ---
+            intent.putExtra("duration", durationString)
+
+            val typeSet = HashSet<String>()
+            for (seat in selectedSeats) {
+                when (seat.type) {
+                    1 -> typeSet.add("VIP")
+                    2 -> typeSet.add("Couple")
+                    else -> typeSet.add("Standard")
+                }
+            }
+            // Kết quả sẽ là: "Standard", "VIP", hoặc "Standard, VIP"
+            val seatTypeString = typeSet.joinToString(", ")
+            intent.putExtra("seat_type", seatTypeString)
+
+            intent.putExtra("cinema_name", getIntent().getStringExtra("cinema_name"))
+            intent.putExtra("selected_date", getIntent().getStringExtra("selected_date"))
+            intent.putExtra("selected_time", getIntent().getStringExtra("selected_time"))
+            intent.putExtra("room_name", roomName)
+
+            intent.putStringArrayListExtra("seat_ids", seatIds)
+            intent.putStringArrayListExtra("seat_names", seatNames)
+
+            intent.putExtra("total_price", fixedTotalPrice)
+            intent.putExtra("expire_time_seconds", expireTimeSeconds)
+
+            startActivity(intent)
+
+        }.addOnFailureListener { e ->
+            if (e is com.google.firebase.firestore.FirebaseFirestoreException &&
+                e.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.ABORTED
+            ) {
+                Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this, "Lỗi kết nối: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun isLeftSeatOfCouple(pos: Int): Boolean {
+        val rowStart = (pos / totalCols) * totalCols
+        var consecutiveDoubles = 0
+        var i = pos - 1
+        while (i >= rowStart && allSeats[i].type == 2) {
+            consecutiveDoubles++
+            i--
+        }
+        return (consecutiveDoubles % 2 == 0)
+    }
+
+    // Các hàm realtime cũ giữ nguyên logic
     private fun startRealtimeUpdates() {
         val showtimeRef = db.collection("showtimes").document(showtimeId)
         val locksRef = showtimeRef.collection("locks")
 
-        // 1. LẮNG NGHE GHẾ ĐÃ BÁN (BOOKED)
         showtimeRef.addSnapshotListener { snapshot, e ->
             if (e != null || snapshot == null) return@addSnapshotListener
-
             val bookedList = snapshot.get("bookedSeats") as? List<Long> ?: emptyList()
-            listSoldSeats = bookedList.toHashSet() // Lưu vào biến tạm
-
-            // Mỗi khi dữ liệu thay đổi -> Vẽ lại ghế
+            listSoldSeats = bookedList.toHashSet()
             refreshSeatMap()
         }
 
-        // 2. LẮNG NGHE GHẾ ĐANG GIỮ (LOCKS)
         locksRef.addSnapshotListener { snapshot, e ->
             if (e != null || snapshot == null) return@addSnapshotListener
-
             val tempLocked = HashSet<Long>()
-            val currentTime = com.google.firebase.Timestamp.now().seconds
-            val myUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-
+            val currentTime = Timestamp.now().seconds
+            val myUserId = auth.currentUser?.uid
             for (doc in snapshot.documents) {
                 val expireAt = doc.getTimestamp("expireAt")?.seconds ?: 0
                 val holderId = doc.getString("userId")
                 val seatId = doc.id.toLongOrNull()
-
-                // Logic lọc: Nếu còn hạn VÀ không phải của mình -> Coi là đang khóa
                 if (seatId != null && expireAt > currentTime && holderId != myUserId) {
                     tempLocked.add(seatId)
                 }
             }
-            listLockedSeats = tempLocked // Lưu vào biến tạm
-
-            // Mỗi khi dữ liệu thay đổi -> Vẽ lại ghế
+            listLockedSeats = tempLocked
             refreshSeatMap()
         }
-    }
-
-    private fun clearMyOldLocks() {
-        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val locksRef = db.collection("showtimes").document(showtimeId).collection("locks")
-
-        // Tìm tất cả ghế đang được giữ bởi MÌNH
-        locksRef.whereEqualTo("userId", userId).get()
-            .addOnSuccessListener { snapshot ->
-                if (!snapshot.isEmpty) {
-                    val batch = db.batch()
-                    for (doc in snapshot.documents) {
-                        batch.delete(doc.reference)
-                    }
-                    batch.commit()
-                    // Log: Đã dọn dẹp ghế kẹt
-                }
-            }
     }
 
     private fun refreshSeatMap() {
@@ -292,26 +411,27 @@ class SeatSelectionActivity : AppCompatActivity() {
 
             val id = seat.id.toLong()
 
-            // 1. Ưu tiên kiểm tra GHẾ ĐÃ BÁN trước (Màu Xám)
+            // 1. Ưu tiên cao nhất: Ghế đã bán (Trong danh sách Sold)
             if (listSoldSeats.contains(id)) {
                 if (seat.status != SeatStatus.BOOKED) {
                     seat.status = SeatStatus.BOOKED
-                    selectedSeats.remove(seat) // Nếu mình đang chọn thì bỏ chọn
+                    // Nếu ghế này mình lỡ chọn trước khi nó load xong -> Bỏ chọn
+                    selectedSeats.remove(seat)
                     isChanged = true
                 }
             }
-            // 2. Nếu chưa bán, kiểm tra xem có ĐANG GIỮ không (Màu Vàng)
+            // 2. Ưu tiên nhì: Ghế đang bị người khác giữ (Trong danh sách Locked)
             else if (listLockedSeats.contains(id)) {
                 if (seat.status != SeatStatus.HELD) {
                     seat.status = SeatStatus.HELD
-                    selectedSeats.remove(seat) // Nếu mình đang chọn thì bỏ chọn
+                    selectedSeats.remove(seat)
                     isChanged = true
                 }
             }
-            // 3. Nếu không bán, không giữ -> Trả về TRỐNG (Màu Trắng)
+            // 3. Còn lại: Nếu không phải Sold cũng không phải Held
             else {
-                // Chỉ reset nếu nó đang bị hiện sai là BOOKED hoặc HELD
-                // (Giữ nguyên nếu nó đang là SELECTED do chính mình chọn)
+                // Chỉ reset về AVAILABLE nếu nó đang bị kẹt ở trạng thái BOOKED hoặc HELD cũ.
+                // TUYỆT ĐỐI KHÔNG reset nếu nó đang là SELECTED (do chính user đang chọn).
                 if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) {
                     seat.status = SeatStatus.AVAILABLE
                     isChanged = true
@@ -325,30 +445,46 @@ class SeatSelectionActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateSeatInfoText() {
-        val count = selectedSeats.size
-        val total = count * pricePerSeat
-        val formatter = DecimalFormat("#,###")
-        val totalString = formatter.format(total)
-
-        if (count == 0) {
-            tvSeatInfo.text = "0 ghế - 0 VND"
-        } else {
-            tvSeatInfo.text = "$count ghế - ${totalString} VND"
+    private fun clearMyOldLocks() {
+        val userId = auth.currentUser?.uid ?: return
+        val locksRef = db.collection("showtimes").document(showtimeId).collection("locks")
+        locksRef.whereEqualTo("userId", userId).get().addOnSuccessListener { snapshot ->
+            if (!snapshot.isEmpty) {
+                val batch = db.batch()
+                for (doc in snapshot.documents) batch.delete(doc.reference)
+                batch.commit()
+            }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Nếu thoát màn hình (isFinishing) và đang giữ ghế
         if (isFinishing && myLockedSeatIds.isNotEmpty()) {
             val batch = db.batch()
             val locksRef = db.collection("showtimes").document(showtimeId).collection("locks")
-
             for (id in myLockedSeatIds) {
                 batch.delete(locksRef.document(id))
             }
-            batch.commit() // Gửi lệnh xóa ngầm, không cần chờ
+            batch.commit()
         }
+    }
+
+    // Hàm tính tên ghế chuẩn (Bỏ qua lối đi AISLE)
+    private fun calculateSeatName(seatId: Int): String {
+        val rowIndex = seatId / totalCols
+        val rowChar = (rowIndex + 65).toChar() // A, B, C...
+
+        var realSeatCount = 0
+        val startOfRow = rowIndex * totalCols
+
+        // Chạy vòng lặp từ đầu hàng đến vị trí ghế hiện tại
+        for (i in startOfRow..seatId) {
+            // Nếu vị trí i KHÔNG PHẢI lối đi -> Thì mới đếm
+            // Lưu ý: Kiểm tra trong danh sách allSeats
+            if (i < allSeats.size && allSeats[i].status != SeatStatus.AISLE) {
+                realSeatCount++
+            }
+        }
+        return "$rowChar$realSeatCount"
     }
 }

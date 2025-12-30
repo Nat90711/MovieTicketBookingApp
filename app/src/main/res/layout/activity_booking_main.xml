@@ -32,7 +32,7 @@
         app:layout_constraintTop_toTopOf="@id/btnBack" />
 
     <TextView
-        android:id="@+id/tvCinemaSelector"
+        android:id="@+id/tvCinema"
         android:layout_width="0dp"
         android:layout_height="50dp"
         android:layout_marginHorizontal="16dp"
@@ -43,7 +43,6 @@
         android:text="Cinestar Sinh Viên (Bình Dương)"
         android:textColor="#000000"
         android:textStyle="bold"
-        android:drawableEnd="@android:drawable/arrow_down_float"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack" />
@@ -57,7 +56,7 @@
         android:paddingHorizontal="16dp"
         android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/tvCinemaSelector"
+        app:layout_constraintTop_toBottomOf="@id/tvCinema"
         tools:listitem="@layout/item_date_slot" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -71,6 +70,20 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintTop_toBottomOf="@id/rvDate"
         tools:listitem="@layout/item_time_slot" />
+
+    <TextView
+        android:id="@+id/tvEmptyTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Không có suất chiếu nào"
+        android:textColor="#888888"
+        android:textSize="16sp"
+        android:textStyle="italic"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rvDate" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardPoster"

@@ -1,19 +1,26 @@
 package com.example.movieticketbookingapp.ui.auth
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.movieticketbookingapp.ui.admin.AdminMovieActivity
 import com.example.movieticketbookingapp.ui.main.HomeActivity
 import com.example.movieticketbookingapp.R
 import com.example.movieticketbookingapp.ui.admin.AdminDashboardActivity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : AppCompatActivity() {
@@ -21,9 +28,28 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
 
-    // 1. Đưa biến view lên đây để các hàm bên dưới dùng được
     private lateinit var progressBar: ProgressBar
     private lateinit var btnLogin: MaterialButton
+    private lateinit var btnGoogleLogin: MaterialButton // <--- Khai báo nút mới
+    private lateinit var googleSignInClient: GoogleSignInClient // <--- Client Google
+
+    // --- XỬ LÝ KẾT QUẢ TRẢ VỀ TỪ GOOGLE ---
+    private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                if (account != null) {
+                    firebaseAuthWithGoogle(account.idToken!!)
+                }
+            } catch (e: ApiException) {
+                hideLoading()
+                Toast.makeText(this, "Google Sign-In thất bại: ${e.statusCode}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            hideLoading()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,21 +58,28 @@ class LoginActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
+        // Setup Google Sign In Options
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id)) // Tự động lấy từ google-services.json
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
         // Ánh xạ View
         val etUsername = findViewById<TextInputEditText>(R.id.etUsername)
         val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
         val tvGoToSignUp = findViewById<TextView>(R.id.tvGoToSignUp)
 
-        // Khởi tạo 2 biến toàn cục
         btnLogin = findViewById(R.id.btnLogin)
+        btnGoogleLogin = findViewById(R.id.btnGoogleLogin) // <--- Ánh xạ
         progressBar = findViewById(R.id.progressBar)
 
-        // Kiểm tra session cũ
         if (auth.currentUser != null) {
             checkRoleAndRedirect(auth.currentUser!!.uid)
             return
         }
 
+        // Sự kiện Login thường
         btnLogin.setOnClickListener {
             val usernameInput = etUsername.text.toString().trim()
             val password = etPassword.text.toString().trim()
@@ -55,10 +88,15 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Vui lòng nhập Username và Password", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
-            // --- BẮT ĐẦU LOGIN ---
-            showLoading() // Hiện loading
+            showLoading()
             loginWithUsername(usernameInput, password)
+        }
+
+        // --- SỰ KIỆN LOGIN GOOGLE ---
+        btnGoogleLogin.setOnClickListener {
+            showLoading()
+            val signInIntent = googleSignInClient.signInIntent
+            googleSignInLauncher.launch(signInIntent)
         }
 
         tvGoToSignUp.setOnClickListener {
@@ -66,19 +104,73 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // Hàm phụ: Hiện loading
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    if (user != null) {
+                        checkGoogleUserInFirestore(user)
+                    }
+                } else {
+                    hideLoading()
+                    Toast.makeText(this, "Lỗi xác thực Firebase: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    // Kiểm tra xem User Google này đã có trong Firestore chưa
+    // Nếu chưa (lần đầu login) -> Tạo mới Document
+    // Nếu rồi -> Chuyển hướng
+    private fun checkGoogleUserInFirestore(user: com.google.firebase.auth.FirebaseUser) {
+        val userId = user.uid
+        val userRef = db.collection("users").document(userId)
+
+        userRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                // Đã có tài khoản -> Chuyển hướng
+                checkRoleAndRedirect(userId)
+            } else {
+                // Lần đầu đăng nhập -> Lưu thông tin vào Firestore
+                val newUser = hashMapOf(
+                    "id" to userId,
+                    "fullName" to (user.displayName ?: "Google User"),
+                    "email" to (user.email ?: ""),
+                    "role" to "user", // Mặc định là user
+                    "username" to (user.email ?: "") // Dùng email làm username tạm
+                )
+
+                userRef.set(newUser).addOnSuccessListener {
+                    checkRoleAndRedirect(userId)
+                }.addOnFailureListener {
+                    hideLoading()
+                    Toast.makeText(this, "Lỗi tạo dữ liệu người dùng", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.addOnFailureListener {
+            hideLoading()
+            Toast.makeText(this, "Lỗi kết nối Server", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ... (Giữ nguyên các hàm showLoading, hideLoading, loginWithUsername, performFirebaseLogin, checkRoleAndRedirect cũ) ...
+
     private fun showLoading() {
         progressBar.visibility = View.VISIBLE
         btnLogin.isEnabled = false
-        btnLogin.text = "" // Xóa chữ để chỉ hiện vòng xoay (tùy chọn)
+        btnGoogleLogin.isEnabled = false // Disable nút Google
+        btnLogin.text = ""
     }
 
-    // Hàm phụ: Ẩn loading (Quan trọng: Gọi khi lỗi)
     private fun hideLoading() {
         progressBar.visibility = View.GONE
         btnLogin.isEnabled = true
+        btnGoogleLogin.isEnabled = true // Enable lại
         btnLogin.text = "LOGIN"
     }
+
+    // ... (Phần còn lại của file LoginActivity cũ copy vào đây)
 
     private fun loginWithUsername(username: String, password: String) {
         db.collection("users")
@@ -86,23 +178,20 @@ class LoginActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
-                    // LỖI: Không tìm thấy username
-                    hideLoading() // <--- Phải ẩn loading
+                    hideLoading()
                     Toast.makeText(this, "Username không tồn tại!", Toast.LENGTH_SHORT).show()
                 } else {
                     val email = documents.documents[0].getString("email")
                     if (email != null) {
                         performFirebaseLogin(email, password)
                     } else {
-                        // LỖI: Data sai
-                        hideLoading() // <--- Phải ẩn loading
+                        hideLoading()
                         Toast.makeText(this, "Lỗi dữ liệu tài khoản!", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
             .addOnFailureListener {
-                // LỖI: Mạng hoặc Server
-                hideLoading() // <--- Phải ẩn loading
+                hideLoading()
                 Toast.makeText(this, "Lỗi kết nối: ${it.message}", Toast.LENGTH_SHORT).show()
             }
     }
@@ -116,8 +205,7 @@ class LoginActivity : AppCompatActivity() {
                         checkRoleAndRedirect(userId)
                     }
                 } else {
-                    // LỖI: Sai mật khẩu
-                    hideLoading() // <--- Phải ẩn loading
+                    hideLoading()
                     Toast.makeText(this, "Sai mật khẩu!", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -126,9 +214,6 @@ class LoginActivity : AppCompatActivity() {
     private fun checkRoleAndRedirect(userId: String) {
         db.collection("users").document(userId).get()
             .addOnSuccessListener { document ->
-                // Khi thành công chuyển màn hình thì không cần hideLoading cũng được,
-                // vì Activity này sẽ bị đóng hoặc che đi.
-
                 if (document != null && document.exists()) {
                     val role = document.getString("role")
                     val fullName = document.getString("fullName")
@@ -142,7 +227,7 @@ class LoginActivity : AppCompatActivity() {
                     }
                     finish()
                 } else {
-                    hideLoading() // Trường hợp hiếm: có Auth nhưng không có dữ liệu trong Firestore
+                    hideLoading()
                 }
             }
             .addOnFailureListener {

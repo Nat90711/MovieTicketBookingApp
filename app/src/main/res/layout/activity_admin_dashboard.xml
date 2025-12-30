@@ -69,7 +69,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:src="@drawable/ic_movie"
-                    app:tint="#2196F3"/> <TextView
+                    app:tint="@color/text_primary"/> <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Phim"
@@ -106,7 +106,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:src="@drawable/ic_room"
-                    app:tint="#FF9800"/> <TextView
+                    app:tint="@color/text_primary"/> <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Phòng Chiếu"
@@ -144,7 +144,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:src="@drawable/ic_calendar"
-                    app:tint="#4CAF50"/> <TextView
+                    app:tint="@color/text_primary"/> <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Lịch Chiếu"
@@ -153,6 +153,44 @@
                 android:layout_marginTop="12dp"/>
                 <TextView
                     android:text="Xếp lịch, giá vé"
+                    android:textSize="12sp"
+                    android:textColor="#888"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardManageFood"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="16dp">
+                <ImageView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/ic_food"
+                    app:tint="@color/text_primary"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Đồ Ăn"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"/>
+                <TextView
+                    android:text="Menu bắp nước"
                     android:textSize="12sp"
                     android:textColor="#888"
                     android:layout_width="wrap_content"
@@ -181,7 +219,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:src="@drawable/ic_chart"
-                    app:tint="#9C27B0"/> <TextView
+                    app:tint="@color/text_primary"/> <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Doanh Thu"
@@ -196,6 +234,50 @@
                     android:layout_height="wrap_content"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardManageBookings"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/ic_ticket"
+                    app:tint="@color/text_primary"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quản lý Vé"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"/>
+
+                <TextView
+                    android:text="Check-in, tra cứu vé"
+                    android:textSize="12sp"
+                    android:textColor="#888"
+                    android:gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+
 
     </GridLayout>
 

@@ -34,9 +34,9 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="4dp"
             app:layout_constraintStart_toEndOf="@id/cardPoster"
-            app:layout_constraintEnd_toStartOf="@id/btnDelete"
+            app:layout_constraintEnd_toStartOf="@id/layoutActions"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
 
@@ -71,18 +71,36 @@
                 android:layout_marginTop="4dp"/>
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/btnDelete"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_delete"
-            app:tint="#FF4D4D"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-
+        <LinearLayout
+            android:id="@+id/layoutActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageView
+                android:id="@+id/btnEdit"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_edit"
+                app:tint="#000000"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="8dp"/>
+
+            <ImageView
+                android:id="@+id/btnDelete"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_delete"
+                app:tint="#FF4D4D"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"/>
+        </LinearLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
