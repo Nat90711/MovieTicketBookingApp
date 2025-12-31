@@ -29,6 +29,7 @@ class SignUpActivity : AppCompatActivity() {
         val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
         val btnRegister = findViewById<MaterialButton>(R.id.btnRegister)
         val tvGoToLogin = findViewById<TextView>(R.id.tvGoToLogin)
+        tvGoToLogin.paintFlags = tvGoToLogin.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
 
         btnRegister.setOnClickListener {
             val name = etName.text.toString().trim()

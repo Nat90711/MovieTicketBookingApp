@@ -69,6 +69,7 @@ class LoginActivity : AppCompatActivity() {
         val etUsername = findViewById<TextInputEditText>(R.id.etUsername)
         val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
         val tvGoToSignUp = findViewById<TextView>(R.id.tvGoToSignUp)
+        tvGoToSignUp.paintFlags = tvGoToSignUp.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
 
         btnLogin = findViewById(R.id.btnLogin)
         btnGoogleLogin = findViewById(R.id.btnGoogleLogin) // <--- Ánh xạ
