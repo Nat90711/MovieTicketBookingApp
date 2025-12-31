@@ -37,19 +37,25 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvSeatConfig"
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        android:padding="4dp"
+        android:fillViewport="true"
         app:layout_constraintBottom_toTopOf="@+id/tvInstruction"
-        app:layout_constraintTop_toBottomOf="@id/layoutHeader"
-        tools:itemCount="50"
-        tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        tools:listitem="@layout/item_seat"
-        tools:spanCount="5" />
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSeatConfig"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:padding="4dp"
+            tools:itemCount="50"
+            tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            tools:listitem="@layout/item_seat"
+            tools:spanCount="5" />
+    </HorizontalScrollView>
 
     <TextView
         android:id="@+id/tvInstruction"
@@ -72,7 +78,6 @@
         android:weightSum="4"
         app:layout_constraintBottom_toTopOf="@id/btnSaveRoom">
 
-        <!-- 1. Ghế Thường -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnModeStandard"
             android:layout_width="0dp"
@@ -87,7 +92,6 @@
             app:strokeColor="@color/text_primary"
             app:strokeWidth="1dp" />
 
-        <!-- 2. Ghế VIP -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnModeVIP"
             android:layout_width="0dp"
@@ -103,7 +107,6 @@
             app:strokeColor="@color/text_primary"
             app:strokeWidth="1dp" />
 
-        <!-- 3. Ghế Đôi -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnModeDouble"
             android:layout_width="0dp"
@@ -119,7 +122,6 @@
             app:strokeColor="@color/text_primary"
             app:strokeWidth="1dp" />
 
-        <!-- 4. Lối đi -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnModeAisle"
             android:layout_width="0dp"

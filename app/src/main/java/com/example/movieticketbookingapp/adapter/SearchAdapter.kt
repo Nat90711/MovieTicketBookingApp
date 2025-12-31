@@ -24,7 +24,7 @@ class SearchAdapter(
         fun bind(movie: Movie) {
             tvTitle.text = movie.title
             tvGenre.text = movie.genre
-            tvDuration.text = "${movie.duration}"
+            tvDuration.text = "${movie.duration}m"
 
             Glide.with(itemView.context).load(movie.posterUrl).into(imgPoster)
 

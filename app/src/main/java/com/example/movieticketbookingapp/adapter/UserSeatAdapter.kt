@@ -16,7 +16,6 @@ class UserSeatAdapter(
     private val onSeatClick: (Seat) -> Unit
 ) : RecyclerView.Adapter<UserSeatAdapter.SeatViewHolder>() {
 
-    // Helper kiểm tra ghế đôi đầu (Trái) hay đuôi (Phải)
     private fun isLeftSeatOfCouple(pos: Int, type: Int): Boolean {
         if (type != 2) return false
         val rowStart = (pos / totalCols) * totalCols
@@ -31,99 +30,114 @@ class UserSeatAdapter(
 
     inner class SeatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val viewSeat: View = itemView.findViewById(R.id.viewSeat)
+        val tvSeatName: TextView = itemView.findViewById(R.id.tvSeatName) // Ánh xạ TextView
 
         fun bind(seat: Seat, position: Int) {
-            // 1. Reset trạng thái visual
+            // 1. Reset visual
             viewSeat.visibility = View.VISIBLE
             viewSeat.alpha = 1.0f
             viewSeat.background = null
-            viewSeat.backgroundTintList = null // Xóa tint cũ
+            viewSeat.backgroundTintList = null
 
-            // 2. Setup LayoutParams (Margin) cho ghế đôi dính nhau
+            // Tính tên ghế: A1, A2, B1...
+            val rowChar = (position / totalCols + 65).toChar()
+            val colNum = (position % totalCols) + 1
+            tvSeatName.text = "$rowChar$colNum"
+
+            // Layout Params
             val params = viewSeat.layoutParams as ViewGroup.MarginLayoutParams
-            val marginSize = 4 // Khoảng cách tiêu chuẩn
-            params.setMargins(marginSize, marginSize, marginSize, marginSize) // Reset
+            val marginSize = 2
+            params.setMargins(marginSize, marginSize, marginSize, marginSize)
 
-            // 3. Xử lý hiển thị theo Loại ghế & Trạng thái
+            // 2. Xử lý LỐI ĐI (AISLE)
             if (seat.status == SeatStatus.AISLE || seat.type == -1) {
                 viewSeat.visibility = View.INVISIBLE
+                tvSeatName.visibility = View.INVISIBLE // Ẩn tên ghế lối đi
                 return
+            } else {
+                tvSeatName.visibility = View.VISIBLE
             }
 
-            // --- A. XÁC ĐỊNH HÌNH DÁNG (SHAPE) ---
-            var bgResId = R.drawable.bg_seat_available // Mặc định bo tròn 4 góc
-
+            // 3. Xử lý HÌNH DÁNG (Shape)
+            var bgResId = R.drawable.bg_seat_available
             if (seat.type == 2) { // Ghế đôi
                 if (isLeftSeatOfCouple(position, seat.type)) {
                     bgResId = R.drawable.bg_seat_couple_left
-                    params.setMargins(marginSize, marginSize, 0, marginSize) // Dính phải
+                    params.setMargins(marginSize, marginSize, 0, marginSize)
                 } else {
                     bgResId = R.drawable.bg_seat_couple_right
-                    params.setMargins(0, marginSize, marginSize, marginSize) // Dính trái
+                    params.setMargins(0, marginSize, marginSize, marginSize)
                 }
             }
-
             viewSeat.setBackgroundResource(bgResId)
             viewSeat.layoutParams = params
 
-            // --- B. XÁC ĐỊNH MÀU SẮC (COLOR) THEO TRẠNG THÁI ---
+            // 4. Xử lý MÀU SẮC & MÀU CHỮ
+            var textColor = Color.BLACK // Mặc định chữ đen
+
             val color = when (seat.status) {
-                SeatStatus.BOOKED -> Color.parseColor("#888888") // Xám
-                SeatStatus.HELD -> Color.parseColor("#FFC107")   // Vàng
-                SeatStatus.SELECTED -> Color.parseColor("#4A90E2") // Xanh lam
+                SeatStatus.BOOKED -> {
+                    textColor = Color.WHITE
+                    Color.parseColor("#888888")
+                }
+                SeatStatus.HELD -> {
+                    textColor = Color.BLACK
+                    Color.parseColor("#FFC107")
+                }
+                SeatStatus.SELECTED -> {
+                    textColor = Color.WHITE
+                    Color.parseColor("#4A90E2")
+                }
                 SeatStatus.AVAILABLE -> {
-                    // Nếu còn trống thì tô màu theo loại ghế
                     when (seat.type) {
-                        1 -> Color.parseColor("#F44336") // VIP
-                        2 -> Color.parseColor("#E91E63") // Couple
-                        else -> Color.parseColor("#E0E0E0")             // Thường
+                        1 -> { // VIP
+                            textColor = Color.WHITE
+                            Color.parseColor("#F44336")
+                        }
+                        2 -> { // Couple
+                            textColor = Color.WHITE
+                            Color.parseColor("#E91E63")
+                        }
+                        else -> { // Thường
+                            textColor = Color.BLACK
+                            Color.parseColor("#E0E0E0")
+                        }
                     }
                 }
                 else -> Color.WHITE
             }
 
             viewSeat.background.setTint(color)
+            tvSeatName.setTextColor(textColor)
 
-            // Sự kiện click
+            // 5. Logic Click
             var isEnable = true
-
-            // Nếu ghế đã có người đặt/giữ -> Disable
             if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) {
                 isEnable = false
             } else {
-                // Logic lọc theo chế độ vé
                 if (isCoupleMode) {
-                    // Nếu mua Vé Đôi -> Chỉ cho chọn ghế Type 2 (Couple)
                     if (seat.type != 2) isEnable = false
                 } else {
-                    // Nếu mua Vé Đơn -> Chỉ cho chọn ghế Type 0, 1 (Thường, VIP)
-                    // Không cho chọn ghế Type 2
                     if (seat.type == 2) isEnable = false
                 }
             }
 
             if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) {
                 viewSeat.alpha = 1.0f
-                itemView.setOnClickListener {
-                }
-            }
-            // 2. TRƯỜNG HỢP: GHẾ CÒN TRỐNG (AVAILABLE)
-            else {
-                // Kiểm tra xem ghế có phù hợp với loại vé đang chọn không
+                itemView.setOnClickListener {}
+            } else {
                 var isCompatible = true
                 if (isCoupleMode) {
-                    if (seat.type != 2) isCompatible = false // Mua vé đôi mà chọn ghế đơn -> Sai
+                    if (seat.type != 2) isCompatible = false
                 } else {
-                    if (seat.type == 2) isCompatible = false // Mua vé đơn mà chọn ghế đôi -> Sai
+                    if (seat.type == 2) isCompatible = false
                 }
 
                 if (isCompatible) {
-                    // --- HỢP LỆ ---
-                    viewSeat.alpha = 1.0f // Sáng rõ
+                    viewSeat.alpha = 1.0f
                     itemView.setOnClickListener { onSeatClick(seat) }
                 } else {
-                    // --- KHÔNG HỢP LỆ (Sai loại vé) ---
-                    viewSeat.alpha = 0.3f // Làm mờ đi để user biết không được chọn
+                    viewSeat.alpha = 0.3f
                     itemView.setOnClickListener {
                         val msg = if (isCoupleMode) "Bạn đang mua Vé Đôi, chỉ được chọn ghế đôi!"
                         else "Bạn đang mua Vé Đơn, không thể chọn ghế đôi!"

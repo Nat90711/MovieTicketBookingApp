@@ -39,15 +39,22 @@
         android:src="@drawable/bg_screen_curve"
         app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvSeat"
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="16dp"
+        android:fillViewport="true"
         app:layout_constraintBottom_toTopOf="@id/layoutLegendContainer"
-        app:layout_constraintTop_toBottomOf="@id/imgScreen"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@id/imgScreen">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSeat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
+    </HorizontalScrollView>
 
     <LinearLayout
         android:id="@+id/layoutLegendContainer"
@@ -151,6 +158,7 @@
                 android:textColor="@color/text_primary"
                 android:textSize="12sp" />
         </LinearLayout>
+
     </LinearLayout>
 
     <TextView

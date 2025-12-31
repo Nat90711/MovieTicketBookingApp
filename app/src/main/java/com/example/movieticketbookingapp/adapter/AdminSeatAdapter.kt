@@ -4,53 +4,61 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.movieticketbookingapp.R
 
-// Định nghĩa các hằng số trạng thái (để dùng chung)
 const val SEAT_TYPE_STANDARD = 0
 const val SEAT_TYPE_VIP = 1
 const val SEAT_TYPE_DOUBLE = 2
-const val SEAT_TYPE_AISLE = -1 // Lối đi (khoảng trống)
+const val SEAT_TYPE_AISLE = -1
 
 class AdminSeatAdapter(
-    private val seatTypes: ArrayList<Int>, // List chứa trạng thái ghế (0, 1, -1)
+    private val seatTypes: ArrayList<Int>,
     private val totalCols: Int,
     private val onSeatClick: (Int) -> Unit
 ) : RecyclerView.Adapter<AdminSeatAdapter.ViewHolder>() {
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val viewSeat: View = itemView.findViewById(R.id.viewSeat)
+        val tvSeatName: TextView = itemView.findViewById(R.id.tvSeatName) // Ánh xạ TextView
 
         fun bind(type: Int, position: Int) {
             viewSeat.visibility = View.VISIBLE
             viewSeat.alpha = 1.0f
-
-            // Xóa background cũ để tránh chồng chéo
             viewSeat.background = null
 
-            // Lấy LayoutParams để chỉnh margin
-            val params = viewSeat.layoutParams as ViewGroup.MarginLayoutParams
-            val marginSize = 4
+            // Tính tên ghế
+            val rowChar = (position / totalCols + 65).toChar()
+            val colNum = (position % totalCols) + 1
+            tvSeatName.text = "$rowChar$colNum"
 
-            // Reset margin mặc định
+            val params = viewSeat.layoutParams as ViewGroup.MarginLayoutParams
+            val marginSize = 2
             params.setMargins(marginSize, marginSize, marginSize, marginSize)
 
             when (type) {
                 SEAT_TYPE_STANDARD -> {
                     viewSeat.setBackgroundResource(R.drawable.bg_seat_available)
-                    viewSeat.background.setTintList(null)
+                    viewSeat.background.setTintList(null) // Màu gốc (xám nhạt)
+                    tvSeatName.setTextColor(Color.BLACK)
+                    tvSeatName.visibility = View.VISIBLE
                 }
                 SEAT_TYPE_VIP -> {
                     viewSeat.setBackgroundResource(R.drawable.bg_seat_available)
                     viewSeat.background.mutate().setTint(Color.parseColor("#F44336"))
+                    tvSeatName.setTextColor(Color.WHITE)
+                    tvSeatName.visibility = View.VISIBLE
                 }
                 SEAT_TYPE_AISLE -> {
                     viewSeat.visibility = View.INVISIBLE
+                    tvSeatName.visibility = View.INVISIBLE
                 }
                 SEAT_TYPE_DOUBLE -> {
                     determineCoupleSeatBackground(position, params, marginSize)
                     viewSeat.background?.setTintList(null)
+                    tvSeatName.setTextColor(Color.WHITE)
+                    tvSeatName.visibility = View.VISIBLE
                 }
             }
 
@@ -72,17 +80,11 @@ class AdminSeatAdapter(
                 i--
             }
 
-            // Kiểm tra Chẵn/Lẻ để biết là Trái hay Phải
             if (consecutiveDoublesCount % 2 == 0) {
-                // === NỬA TRÁI ===
                 viewSeat.setBackgroundResource(R.drawable.bg_seat_couple_left)
-
                 params.setMargins(stdMargin, stdMargin, 0, stdMargin)
-
             } else {
-                // === NỬA PHẢI ===
                 viewSeat.setBackgroundResource(R.drawable.bg_seat_couple_right)
-
                 params.setMargins(0, stdMargin, stdMargin, stdMargin)
             }
         }
