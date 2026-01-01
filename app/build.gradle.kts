@@ -67,11 +67,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    // Thư viện load ảnh siêu nhanh (Glide)
     implementation("com.github.bumptech.glide:glide:4.16.0")
-// Thư viện làm Slide ảnh
     implementation("androidx.viewpager2:viewpager2:1.0.0")
-// Thư viện bo góc ảnh cho đẹp
     implementation("com.makeramen:roundedimageview:2.3.0")
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     implementation("com.google.firebase:firebase-analytics")

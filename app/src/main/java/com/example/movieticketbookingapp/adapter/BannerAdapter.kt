@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.movieticketbookingapp.R
@@ -17,13 +18,20 @@ class BannerAdapter(
     inner class BannerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imgBanner: ImageView = itemView.findViewById(R.id.imgBanner)
 
+        val tvTitle: TextView = itemView.findViewById(R.id.tvBannerTitle)
+        val tvGenre: TextView = itemView.findViewById(R.id.tvBannerGenre)
+
         fun bind(movie: Movie) {
             Glide.with(itemView.context)
                 .load(movie.posterUrl)
                 .centerCrop()
                 .into(imgBanner)
 
-            // 2. Bắt sự kiện click vào ảnh banner
+            // --- Gán dữ liệu ---
+            tvTitle.text = movie.title
+            tvGenre.text = movie.genre ?: "Unknown Genre"
+
+            // Bắt sự kiện click
             itemView.setOnClickListener {
                 onItemClick(movie)
             }
