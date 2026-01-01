@@ -2,7 +2,10 @@ package com.example.movieticketbookingapp.ui.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
@@ -41,7 +44,21 @@ class HomeActivity : AppCompatActivity() {
 
     // Firebase
     private lateinit var db: FirebaseFirestore
-    private var allMovies = ArrayList<Movie>() // List chứa dữ liệu thật
+    private var allMovies = ArrayList<Movie>()
+
+    private val sliderHandler = Handler(Looper.getMainLooper())
+    private val sliderRunnable = Runnable {
+        // Kiểm tra nếu Adapter có dữ liệu
+        val itemCount = vpBanner.adapter?.itemCount ?: 0
+        if (itemCount > 0) {
+            var nextItem = vpBanner.currentItem + 1
+            // Nếu hết trang thì quay lại 0
+            if (nextItem >= itemCount) {
+                nextItem = 0
+            }
+            vpBanner.setCurrentItem(nextItem, true)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,11 +66,9 @@ class HomeActivity : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Không làm gì cả -> Nút Back bị vô hiệu hóa
             }
         })
 
-        // 1. Khởi tạo Firestore
         db = FirebaseFirestore.getInstance()
 
         initViews()
@@ -61,8 +76,13 @@ class HomeActivity : AppCompatActivity() {
         setupSearchLogic()
         setupClickEvents()
 
-        // 2. Gọi hàm tải dữ liệu thật
         loadMoviesRealtime()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Khi app ẩn xuống, dừng auto scroll để tiết kiệm pin
+        sliderHandler.removeCallbacks(sliderRunnable)
     }
 
     override fun onResume() {
@@ -70,7 +90,10 @@ class HomeActivity : AppCompatActivity() {
         if (bottomNav.selectedItemId != R.id.nav_home) {
             bottomNav.selectedItemId = R.id.nav_home
         }
+        // Khi app hiện lại, tiếp tục auto scroll (sau 5s)
+        sliderHandler.postDelayed(sliderRunnable, 5000)
     }
+    // ------------------------------------
 
     private fun initViews() {
         vpBanner = findViewById(R.id.vpHotMovies)
@@ -83,7 +106,6 @@ class HomeActivity : AppCompatActivity() {
         btnSeeAllNowShowing = findViewById(R.id.btnSeeAllNowShowing)
     }
 
-    // === TẢI DỮ LIỆU TỪ FIREBASE ===
     private fun loadMoviesRealtime() {
         db.collection("movies")
             .addSnapshotListener { snapshots, e ->
@@ -98,7 +120,6 @@ class HomeActivity : AppCompatActivity() {
                             val movie = doc.toObject(Movie::class.java)
                             allMovies.add(movie)
                         } catch (err: Exception) {
-                            // Nếu dữ liệu phim này bị lỗi, in ra log để biết mà sửa
                             Log.e("FirebaseError", "Lỗi convert phim: ${doc.id}", err)
                         }
                     }
@@ -109,11 +130,9 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun updateUI() {
-        // 1. Setup Banner (Lấy 5 phim đầu tiên làm Hot Movie)
         val bannerList = allMovies.filter{it.hot}
         setupBanner(bannerList)
 
-        // 2. Setup Now Showing
         val nowShowingMovies = allMovies.filter { it.status == "now_showing" }
         setupNowShowingList(nowShowingMovies)
     }
@@ -121,13 +140,11 @@ class HomeActivity : AppCompatActivity() {
     private fun setupBanner(movies: List<Movie>) {
         if (movies.isEmpty()) return
 
-        // Setup Adapter cho Banner
         val adapter = BannerAdapter(movies) { clickedMovie ->
             openDetailActivity(clickedMovie)
         }
         vpBanner.adapter = adapter
 
-        // Setup Chấm tròn (Pagination)
         setupIndicators(movies.size)
 
         // Đăng ký sự kiện lướt banner
@@ -135,10 +152,28 @@ class HomeActivity : AppCompatActivity() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 setCurrentIndicator(position)
+
+                sliderHandler.removeCallbacks(sliderRunnable)
+                sliderHandler.postDelayed(sliderRunnable, 5000)
             }
         })
 
-        // Hiệu ứng Zoom
+        val child = vpBanner.getChildAt(0) as RecyclerView
+        child.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // Khi ngón tay chạm vào -> Dừng Auto Scroll
+                    sliderHandler.removeCallbacks(sliderRunnable)
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // Khi nhấc ngón tay ra -> Chạy lại Auto Scroll (sau 5s)
+                    sliderHandler.postDelayed(sliderRunnable, 5000)
+                }
+            }
+            false
+        }
+        // -------------------------------------------------
+
         vpBanner.setPageTransformer { page, position ->
             val r = 1 - abs(position)
             page.scaleY = 0.85f + r * 0.15f
@@ -148,8 +183,8 @@ class HomeActivity : AppCompatActivity() {
     private fun setupClickEvents() {
         btnSeeAllNowShowing.setOnClickListener {
             val intent = Intent(this, MovieListActivity::class.java)
-            intent.putExtra("status", "now_showing") // Gửi tag status
-            intent.putExtra("title", "Now Showing") // Gửi tiêu đề hiển thị
+            intent.putExtra("status", "now_showing")
+            intent.putExtra("title", "Now Showing")
             startActivity(intent)
         }
     }
@@ -171,10 +206,8 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupIndicators(count: Int) {
         val indicators = arrayOfNulls<ImageView>(count)
-        val layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        val sizePx = (8 * resources.displayMetrics.density).toInt()
+        val layoutParams = LinearLayout.LayoutParams(sizePx, sizePx)
         layoutParams.setMargins(8, 0, 8, 0)
         layoutIndicators.removeAllViews()
 
@@ -205,7 +238,6 @@ class HomeActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_home -> true
                 R.id.nav_movie -> {
-                    // Chuyển sang màn hình Movies
                     startActivity(Intent(this, MovieActivity::class.java))
                     overridePendingTransition(0, 0)
                     finish()
@@ -229,15 +261,12 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupSearchLogic() {
-        // 1. Setup RecyclerView
         searchAdapter = SearchAdapter(arrayListOf()) { clickedMovie ->
-            // Khi bấm vào kết quả tìm kiếm -> Mở chi tiết
             openDetailActivity(clickedMovie)
         }
         rvSearchResults.adapter = searchAdapter
         rvSearchResults.layoutManager = LinearLayoutManager(this)
 
-        // 2. Setup sự kiện gõ phím
         etSearch.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
@@ -252,10 +281,8 @@ class HomeActivity : AppCompatActivity() {
 
     private fun filterAndShowDropdown(query: String) {
         if (query.isEmpty()) {
-            // Nếu không gõ gì -> Ẩn Dropdown đi
             rvSearchResults.visibility = android.view.View.GONE
         } else {
-            // Lọc danh sách
             val filteredList = ArrayList<Movie>()
             for (movie in allMovies) {
                 if (movie.title.lowercase().contains(query.lowercase())) {
@@ -264,11 +291,9 @@ class HomeActivity : AppCompatActivity() {
             }
 
             if (filteredList.isNotEmpty()) {
-                // Có kết quả -> Hiện Dropdown và cập nhật dữ liệu
                 rvSearchResults.visibility = android.view.View.VISIBLE
                 searchAdapter.updateList(filteredList)
             } else {
-                // Không tìm thấy phim nào -> Ẩn Dropdown
                 rvSearchResults.visibility = android.view.View.GONE
             }
         }
@@ -280,11 +305,10 @@ class HomeActivity : AppCompatActivity() {
             if (v is android.widget.EditText) {
                 val outRect = android.graphics.Rect()
                 v.getGlobalVisibleRect(outRect)
-                // Kiểm tra xem vị trí bấm có nằm ngoái ô EditText không
                 if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
-                    v.clearFocus() // Bỏ con trỏ nhấp nháy
+                    v.clearFocus()
                     val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-                    imm.hideSoftInputFromWindow(v.windowToken, 0) // Ẩn bàn phím
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
                 }
             }
         }
