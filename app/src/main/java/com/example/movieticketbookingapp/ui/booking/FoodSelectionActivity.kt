@@ -78,7 +78,7 @@ class FoodSelectionActivity : AppCompatActivity() {
     }
 
     private fun calculateFoodPrice() {
-        val selectedMap = adapter.getSelectedFoods() // Map<Id, Qty>
+        val selectedMap = adapter.getSelectedFoods()
         currentFoodPrice = 0.0
 
         for ((id, qty) in selectedMap) {
@@ -93,7 +93,7 @@ class FoodSelectionActivity : AppCompatActivity() {
     private fun updateTotalPrice() {
         val finalTotal = ticketPrice + currentFoodPrice
         val formatter = DecimalFormat("#,###")
-        tvTotalPrice.text = "Tổng: ${formatter.format(finalTotal)} VND"
+        tvTotalPrice.text = "${formatter.format(finalTotal)} VND"
         btnConfirm.text = "TIẾP TỤC (${formatter.format(finalTotal)})"
     }
 
@@ -111,7 +111,7 @@ class FoodSelectionActivity : AppCompatActivity() {
 
         // 3. Đóng gói dữ liệu đồ ăn đã chọn để gửi đi
         val selectedMap = adapter.getSelectedFoods()
-        val foodNames = ArrayList<String>() // VD: "2x Bắp, 1x Nước"
+        val foodNames = ArrayList<String>()
 
         for ((id, qty) in selectedMap) {
             val food = foodList.find { it.id == id }
