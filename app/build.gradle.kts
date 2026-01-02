@@ -28,16 +28,20 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val sepayToken = localProperties.getProperty("SEPAY_API_TOKEN") ?: ""
-        val sepayAcc = localProperties.getProperty("SEPAY_ACCOUNT_NO") ?: ""
-
-        buildConfigField("String", "SEPAY_TOKEN", "\"$sepayToken\"")
-        buildConfigField("String", "SEPAY_BANK_ACC", "\"$sepayAcc\"")
     }
 
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+
+    signingConfigs {
+        create("shared_debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -47,6 +51,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("shared_debug")
         }
     }
     compileOptions {

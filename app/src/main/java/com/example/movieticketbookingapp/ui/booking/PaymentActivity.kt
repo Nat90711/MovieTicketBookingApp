@@ -41,8 +41,8 @@ import okhttp3.ResponseBody
 
 class   PaymentActivity : AppCompatActivity() {
 
-    private val SEPAY_API_TOKEN = BuildConfig.SEPAY_TOKEN
-    private val MY_BANK_ACCOUNT = BuildConfig.SEPAY_BANK_ACC
+    private val SEPAY_API_TOKEN = "Bearer OQMQ4HYRIELZNFCVTF7ECGGKZE9YJXY6QOOQSPOCJF2SUWNGU29T86PSZUZTMB5L"
+    private val MY_BANK_ACCOUNT = "0334174028"
     private val MY_BANK_CODE = "MB"
 
     private val EMAILJS_SERVICE_ID = "service_9mpu0og"
