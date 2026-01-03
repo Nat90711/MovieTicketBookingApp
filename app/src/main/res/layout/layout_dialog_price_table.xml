@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="BẢNG GIÁ VÉ"
+            android:textAlignment="center"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="(Áp dụng cho rạp Cinestar Sinh Viên)"
+            android:textAlignment="center"
+            android:textColor="#757575"
+            android:textSize="12sp"
+            android:textStyle="italic" />
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="1">
+
+            <TableRow android:paddingBottom="8dp">
+                <TextView android:text="Loại vé" android:textStyle="bold" android:textColor="#000000" />
+                <TextView android:text="Điều kiện" android:textStyle="bold" android:textColor="#000000" android:gravity="end" android:layout_marginEnd="10dp"/>
+                <TextView android:text="Giá" android:textStyle="bold" android:textColor="#000000" android:gravity="end" android:paddingStart="16dp"/>
+            </TableRow>
+
+            <View android:background="#E0E0E0" android:layout_height="1dp" android:layout_marginBottom="8dp"/>
+
+            <TableRow android:paddingBottom="8dp">
+                <TextView android:text="Người lớn" android:textColor="#000000"/>
+                <TextView android:text="Mọi khung giờ" android:textColor="#757575" android:gravity="end" android:layout_marginEnd="10dp"/>
+                <TextView android:text="68.000đ" android:textColor="#000000" android:textStyle="bold" android:gravity="end"/>
+            </TableRow>
+
+            <TableRow android:paddingBottom="8dp">
+                <TextView android:text="HSSV / U22" android:textColor="#000000"/>
+                <TextView android:text="Trước 22h / Thứ 2" android:textColor="#757575" android:gravity="end" android:layout_marginEnd="10dp"/>
+                <TextView android:text="45.000đ" android:textColor="#000000" android:textStyle="bold" android:gravity="end"/>
+            </TableRow>
+
+            <TableRow android:paddingBottom="8dp">
+                <TextView android:text="HSSV / U22" android:textColor="#000000"/>
+                <TextView android:text="Sau 22h" android:textColor="#757575" android:gravity="end" android:layout_marginEnd="10dp"/>
+                <TextView android:text="49.000đ" android:textColor="#000000" android:textStyle="bold" android:gravity="end"/>
+            </TableRow>
+
+            <TableRow android:paddingBottom="8dp">
+                <TextView android:text="Vé Đôi" android:textColor="#000000"/>
+                <TextView android:text="2 người" android:textColor="#757575" android:gravity="end" android:layout_marginEnd="10dp"/>
+                <TextView android:text="136.000đ" android:textColor="#000000" android:textStyle="bold" android:gravity="end"/>
+            </TableRow>
+
+            <View android:background="#E0E0E0" android:layout_height="1dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp"/>
+
+            <TableRow>
+                <TextView android:text="Phụ thu VIP" android:textColor="#F44336"/>
+                <TextView android:text="Chọn ghế VIP" android:textColor="#757575" android:gravity="end" android:layout_marginEnd="10dp"/>
+                <TextView android:text="+10.000đ" android:textColor="#F44336" android:textStyle="bold" android:gravity="end"/>
+            </TableRow>
+
+        </TableLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCloseDialog"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="24dp"
+            android:text="Đã hiểu"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:backgroundTint="@color/button_bg"
+            app:cornerRadius="8dp"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

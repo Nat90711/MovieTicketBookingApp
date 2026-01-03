@@ -118,8 +118,7 @@ class   PaymentActivity : AppCompatActivity() {
 
     // Nhận dữ liệu từ ReviewTicketActivity
     private fun getIntentData() {
-//        totalPrice = intent.getDoubleExtra("total_price", 0.0)
-        totalPrice = 1000.0
+        totalPrice = intent.getDoubleExtra("total_price", 0.0)
         showtimeId = intent.getStringExtra("showtime_id") ?: ""
         seatIds = intent.getStringArrayListExtra("seat_ids") ?: arrayListOf()
         seatNames = intent.getStringArrayListExtra("seat_names") ?: arrayListOf()

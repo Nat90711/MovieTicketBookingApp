@@ -1,6 +1,8 @@
 package com.example.movieticketbookingapp.ui.booking
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -57,9 +59,29 @@ class SelectTicketTypeActivity : AppCompatActivity() {
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
 
+        findViewById<ImageView>(R.id.btnPriceInfo).setOnClickListener {
+            showPriceInfoDialog()
+        }
+
         btnContinue.setOnClickListener {
             handleContinue()
         }
+    }
+
+    private fun showPriceInfoDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.layout_dialog_price_table, null)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialogView.findViewById<View>(R.id.btnCloseDialog).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun getIntentData() {
