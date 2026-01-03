@@ -28,10 +28,19 @@ class AdminSeatAdapter(
             viewSeat.alpha = 1.0f
             viewSeat.background = null
 
-            // Tính tên ghế
             val rowChar = (position / totalCols + 65).toChar()
-            val colNum = (position % totalCols) + 1
-            tvSeatName.text = "$rowChar$colNum"
+
+            var realSeatNum = 0
+            val rowStart = (position / totalCols) * totalCols
+
+            for (i in rowStart..position) {
+
+                if (seatTypes[i] != SEAT_TYPE_AISLE) {
+                    realSeatNum++
+                }
+            }
+
+            tvSeatName.text = "$rowChar$realSeatNum"
 
             val params = viewSeat.layoutParams as ViewGroup.MarginLayoutParams
             val marginSize = 2

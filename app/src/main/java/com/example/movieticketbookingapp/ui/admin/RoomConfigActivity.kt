@@ -130,58 +130,60 @@ class RoomConfigActivity : AppCompatActivity() {
                 Toast.makeText(this, "Không đủ chỗ tạo ghế đôi ở cuối hàng!", Toast.LENGTH_SHORT).show()
                 return
             }
+
             if (seatConfigList[position] == SEAT_TYPE_DOUBLE && !isLeftSeatOfCouple(position)) {
                 if (position - 1 >= 0) {
                     seatConfigList[position - 1] = SEAT_TYPE_STANDARD
-                    adapter.notifyItemChanged(position - 1)
                 }
             }
-
             if (position + 1 < seatConfigList.size && seatConfigList[position + 1] == SEAT_TYPE_DOUBLE) {
                 if (isLeftSeatOfCouple(position + 1)) {
                     if (position + 2 < seatConfigList.size) {
                         seatConfigList[position + 2] = SEAT_TYPE_STANDARD
-                        adapter.notifyItemChanged(position + 2)
                     }
                 }
             }
 
-            // 2. Sau khi dọn dẹp, thiết lập cặp đôi mới
+            // 2. Thiết lập cặp đôi mới
             if (position + 1 < seatConfigList.size) {
                 seatConfigList[position] = SEAT_TYPE_DOUBLE
                 seatConfigList[position + 1] = SEAT_TYPE_DOUBLE
 
-                adapter.notifyItemChanged(position)
-                adapter.notifyItemChanged(position + 1)
+                // CẬP NHẬT GIAO DIỆN: Refresh cả hàng để tính lại tên ghế
+                refreshRowUI(position)
             }
         }
 
-        // --- TRƯỜNG HỢP B: XÓA/SỬA (Logic giữ nguyên như lần trước) ---
+        // --- TRƯỜNG HỢP B: XÓA/SỬA ---
         else {
             if (oldStatus != SEAT_TYPE_DOUBLE) {
                 seatConfigList[position] = currentMode
-                adapter.notifyItemChanged(position)
+                // CẬP NHẬT GIAO DIỆN
+                refreshRowUI(position)
             } else {
-                // Xóa cả cặp
+                // Xóa cả cặp ghế đôi
                 if (isLeftSeatOfCouple(position)) {
                     // Xóa mình + Phải
                     seatConfigList[position] = currentMode
-                    adapter.notifyItemChanged(position)
-                    if (position + 1 < seatConfigList.size && seatConfigList[position + 1] == SEAT_TYPE_DOUBLE) {
+                    if (position + 1 < seatConfigList.size) {
                         seatConfigList[position + 1] = currentMode
-                        adapter.notifyItemChanged(position + 1)
                     }
                 } else {
                     // Xóa mình + Trái
                     seatConfigList[position] = currentMode
-                    adapter.notifyItemChanged(position)
-                    if (position - 1 >= 0 && seatConfigList[position - 1] == SEAT_TYPE_DOUBLE) {
+                    if (position - 1 >= 0) {
                         seatConfigList[position - 1] = currentMode
-                        adapter.notifyItemChanged(position - 1)
                     }
                 }
+                // CẬP NHẬT GIAO DIỆN
+                refreshRowUI(position)
             }
         }
+    }
+
+    private fun refreshRowUI(position: Int) {
+        val rowStart = (position / cols) * cols
+        adapter.notifyDataSetChanged()
     }
 
     private fun isLeftSeatOfCouple(pos: Int): Boolean {

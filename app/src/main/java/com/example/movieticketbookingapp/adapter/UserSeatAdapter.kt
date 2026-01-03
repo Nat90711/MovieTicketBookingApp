@@ -39,17 +39,24 @@ class UserSeatAdapter(
             viewSeat.background = null
             viewSeat.backgroundTintList = null
 
-            // Tính tên ghế: A1, A2, B1...
             val rowChar = (position / totalCols + 65).toChar()
-            val colNum = (position % totalCols) + 1
-            tvSeatName.text = "$rowChar$colNum"
+
+            var realSeatNum = 0
+            val rowStart = (position / totalCols) * totalCols
+
+            for (i in rowStart..position) {
+                if (seatList[i].type != -1) {
+                    realSeatNum++
+                }
+            }
+
+            tvSeatName.text = "$rowChar$realSeatNum"
 
             // Layout Params
             val params = viewSeat.layoutParams as ViewGroup.MarginLayoutParams
             val marginSize = 2
             params.setMargins(marginSize, marginSize, marginSize, marginSize)
 
-            // 2. Xử lý LỐI ĐI (AISLE)
             if (seat.status == SeatStatus.AISLE || seat.type == -1) {
                 viewSeat.visibility = View.INVISIBLE
                 tvSeatName.visibility = View.INVISIBLE // Ẩn tên ghế lối đi
@@ -58,7 +65,6 @@ class UserSeatAdapter(
                 tvSeatName.visibility = View.VISIBLE
             }
 
-            // 3. Xử lý HÌNH DÁNG (Shape)
             var bgResId = R.drawable.bg_seat_available
             if (seat.type == 2) { // Ghế đôi
                 if (isLeftSeatOfCouple(position, seat.type)) {
@@ -72,7 +78,6 @@ class UserSeatAdapter(
             viewSeat.setBackgroundResource(bgResId)
             viewSeat.layoutParams = params
 
-            // 4. Xử lý MÀU SẮC & MÀU CHỮ
             var textColor = Color.BLACK // Mặc định chữ đen
 
             val color = when (seat.status) {
@@ -110,7 +115,7 @@ class UserSeatAdapter(
             viewSeat.background.setTint(color)
             tvSeatName.setTextColor(textColor)
 
-            // 5. Logic Click
+            // Logic Click
             var isEnable = true
             if (seat.status == SeatStatus.BOOKED || seat.status == SeatStatus.HELD) {
                 isEnable = false
